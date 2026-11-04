@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secureqa"
+version = "1.0.0"
+description = "Security-focused test automation framework (pytest + Playwright) for the SecureShop demo app and OWASP Juice Shop."
+authors = [{ name = "Selçuk Genç" }]
+readme = "README.md"
+requires-python = ">=3.11"
+
+# Tooling only; runtime deps live in requirements.txt so beginners have one obvious file.
+[tool.setuptools.packages.find]
+include = ["secureqa*", "demo_app*"]
+
+[tool.pytest.ini_options]
+# Where pytest looks for tests and how it reports them.
+# TR: pytest ayarları — testlerin yeri ve çıktı biçimi.
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra -v --strict-markers --color=yes"
+markers = [
+    "functional: normal behaviour tests against SecureShop (login, search, cart, i18n).",
+    "security: a defensive regression check against SecureShop (should PASS).",
+    "juiceshop: an attack against OWASP Juice Shop (a finding is EXPECTED).",
+    "owasp_a01: Broken Access Control.",
+    "owasp_a02: Cryptographic Failures.",
+    "owasp_a03: Injection.",
+    "owasp_a05: Security Misconfiguration.",
+    "owasp_a07: Identification and Authentication Failures.",
+]

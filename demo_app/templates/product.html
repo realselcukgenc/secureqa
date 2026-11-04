@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_card, product_art, stars, csrf_field, form_errors with context %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block page_class %}product{% endblock %}
+{% block content %}
+<div class="container">
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="{{ url_for('shop.index') }}">{{ t('nav_home') }}</a><span>/</span>
+    <a href="{{ url_for('shop.products', cat=p.category) }}">{{ t('cat_' ~ p.category) }}</a><span>/</span>
+    <span>{{ p.name }}</span>
+  </nav>
+
+  <section class="product-detail" data-testid="product-detail" data-product-id="{{ p.id }}">
+    <div class="detail-media">
+      {{ product_art(p, "art-xl") }}
+      {%- if p.old_price %}<span class="badge badge-sale badge-lg">-{{ p.discount }}%</span>{% endif %}
+    </div>
+    <div class="detail-info">
+      <span class="chip">{{ t('cat_' ~ p.category) }}</span>
+      <h1 class="detail-title" id="product-name" data-testid="product-name">{{ p.name }}</h1>
+      <a class="detail-rating" href="#reviews">{{ stars(p.rating, p.review_count, "stars-lg") }}<span class="muted">{{ t('n_reviews', n=p.review_count) }}</span></a>
+      <div class="detail-price">
+        <span class="price price-lg" id="product-price" data-testid="product-price">{{ p.price | money }}</span>
+        {%- if p.old_price %}<span class="old-price">{{ p.old_price | money }}</span>{% endif %}
+      </div>
+      <p class="detail-desc" data-testid="product-description">{{ p.desc }}</p>
+
+      <p class="stock {{ 'stock-out' if p.stock == 0 else ('stock-low' if p.stock < 10 else 'stock-ok') }}" data-testid="product-stock">
+        <span class="dot"></span>
+        {%- if p.stock == 0 %}{{ t('out_of_stock') }}{% elif p.stock < 10 %}{{ t('low_stock', n=p.stock) }}{% else %}{{ t('in_stock') }}{% endif %}
+      </p>
+
+      {%- if p.stock > 0 %}
+      <form class="buy-box js-add-to-cart" method="post" action="{{ url_for('cart.add', product_id=p.id) }}" data-testid="add-to-cart-form">
+        {{ csrf_field() }}
+        <div class="qty" data-testid="qty-stepper">
+          <button class="qty-btn js-qty-dec" type="button" aria-label="-">{{ icon("minus", "icon-sm") }}</button>
+          <label class="sr-only" for="qty">{{ t('quantity') }}</label>
+          <input id="qty" name="qty" type="number" min="1" max="10" value="1" inputmode="numeric" data-testid="qty-input">
+          <button class="qty-btn js-qty-inc" type="button" aria-label="+">{{ icon("plus", "icon-sm") }}</button>
+        </div>
+        <button class="btn btn-lg btn-primary btn-grow" type="submit" id="add-to-cart-btn" data-testid="add-to-cart-btn">{{ icon("cart") }} {{ t('add_to_cart') }}</button>
+      </form>
+      {%- endif %}
+
+      <ul class="detail-perks">
+        <li>{{ icon("truck", "icon-sm") }} {{ t('perk_ship_sub') }}</li>
+        <li>{{ icon("lock", "icon-sm") }} {{ t('perk_secure_sub') }}</li>
+        <li>{{ icon("refresh", "icon-sm") }} {{ t('perk_return_sub') }}</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section reviews" id="reviews" data-testid="reviews">
+    <div class="section-head"><h2>{{ t('reviews') }} <span class="muted">({{ reviews|length }})</span></h2></div>
+    <div class="reviews-layout">
+      <aside class="review-summary card">
+        <div class="big-rating">{{ '%.1f' | format(p.rating or 0) }}</div>
+        {{ stars(p.rating, None, "stars-lg") }}
+        <p class="muted">{{ t('n_reviews', n=p.review_count) }}</p>
+        <div class="rating-bars">
+          {%- for n in [5, 4, 3, 2, 1] %}
+          <div class="rating-bar"><span>{{ n }}★</span><progress max="{{ [reviews|length, 1]|max }}" value="{{ distribution[n] }}"></progress><span class="muted">{{ distribution[n] }}</span></div>
+          {%- endfor %}
+        </div>
+      </aside>
+
+      <div class="review-list">
+        {%- if g.user %}
+        <form class="card review-form" method="post" action="{{ url_for('shop.add_review', product_id=p.id) }}" id="review-form" data-testid="review-form">
+          {{ csrf_field() }}
+          <h3>{{ t('write_review') }}</h3>
+          {{ form_errors(review_errors, 'review-error', 'review-error') }}
+          <fieldset class="star-input" data-testid="rating-input">
+            <legend class="sr-only">{{ t('your_rating') }}</legend>
+            {%- for n in [5, 4, 3, 2, 1] %}
+            <input type="radio" id="rating-{{ n }}" name="rating" value="{{ n }}" {{ 'checked' if n == 5 }} data-testid="rating-{{ n }}">
+            <label for="rating-{{ n }}" title="{{ n }}">★</label>
+            {%- endfor %}
+          </fieldset>
+          <label class="sr-only" for="review-text">{{ t('your_review') }}</label>
+          <textarea id="review-text" name="body" rows="3" minlength="3" maxlength="1000" required placeholder="{{ t('review_placeholder') }}" data-testid="review-body-input">{{ review_draft }}</textarea>
+          <div class="form-row-end"><button class="btn btn-primary" type="submit" id="review-btn" data-testid="review-submit">{{ t('send_review') }}</button></div>
+        </form>
+        {%- else %}
+        <div class="card review-login" data-testid="review-login-hint">
+          {{ icon("info") }} <span>{{ t('login_to_review') }}</span>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('auth.login', next=request.path) }}">{{ t('nav_login') }}</a>
+        </div>
+        {%- endif %}
+
+        {%- for r in reviews %}
+        <article class="review card" data-testid="review" data-review-id="{{ r.id }}">
+          <header class="review-head">
+            <span class="avatar avatar-{{ (r.user_id % 5) + 1 }}" aria-hidden="true">{{ r.username[:1] | upper }}</span>
+            <div><b class="review-author" data-testid="review-author">{{ r.username }}</b><span class="muted review-date">{{ r.created_at | date }}</span></div>
+            {{ stars(r.rating) }}
+          </header>
+          {#- SECURITY: user-written text, rendered escaped (stored XSS defence). Never add |safe here. -#}
+          <p class="review-body" data-testid="review-body">{{ r.body }}</p>
+        </article>
+        {%- else %}
+        <p class="muted" data-testid="no-reviews">{{ t('no_reviews') }}</p>
+        {%- endfor %}
+      </div>
+    </div>
+  </section>
+
+  {%- if related %}
+  <section class="section" data-testid="related">
+    <div class="section-head"><h2>{{ t('related') }}</h2></div>
+    <div class="product-grid">{% for rp in related %}{{ product_card(rp) }}{% endfor %}</div>
+  </section>
+  {%- endif %}
+</div>
+{% endblock %}

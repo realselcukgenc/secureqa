@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import csrf_field, form_errors with context %}
+{% block title %}{{ t('nav_account') }}{% endblock %}
+{% block page_class %}account{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ t('account_title') }}</h1>
+    <p class="muted">{{ t('account_sub') }}</p>
+  </div>
+</section>
+<div class="container account-grid">
+  <aside class="card profile-card" data-testid="profile-card">
+    <span class="avatar avatar-xl" aria-hidden="true">{{ g.user.username[:1] | upper }}</span>
+    <h2 id="account-username" data-testid="account-username">{{ g.user.username }}</h2>
+    <p class="muted" data-testid="account-fullname">{{ g.user.full_name or '—' }}</p>
+    <span class="chip {{ 'chip-admin' if g.user.role == 'admin' }}" id="account-role" data-testid="account-role">{{ t('role_' ~ g.user.role) }}</span>
+    <dl class="profile-meta">
+      <div><dt>{{ icon("mail", "icon-sm") }} {{ t('email') }}</dt><dd id="account-email" data-testid="account-email">{{ g.user.email or '—' }}</dd></div>
+      <div><dt>{{ icon("map", "icon-sm") }} {{ t('city') }}</dt><dd>{{ g.user.city or '—' }}</dd></div>
+      <div><dt>{{ icon("user", "icon-sm") }} {{ t('member_since') }}</dt><dd>{{ g.user.created_at | date }}</dd></div>
+    </dl>
+    <a class="btn btn-ghost btn-block" href="{{ url_for('auth.logout') }}" data-testid="account-logout">{{ icon("logout", "icon-sm") }} {{ t('nav_logout') }}</a>
+  </aside>
+
+  <div class="account-main">
+    <section class="card" data-testid="email-card">
+      <h2 class="card-h">{{ icon("mail") }} {{ t('change_email') }}</h2>
+      {{ form_errors(email_errors, 'email-error', 'email-error') }}
+      <form class="form form-inline" method="post" action="{{ url_for('account.change_email') }}" id="email-form" data-testid="email-form">
+        {{ csrf_field() }}
+        <label class="sr-only" for="new-email">{{ t('new_email') }}</label>
+        <input id="new-email" name="email" type="email" maxlength="254" required placeholder="{{ t('new_email') }}" autocomplete="email" data-testid="email-input">
+        <button class="btn btn-primary" type="submit" id="email-btn" data-testid="email-submit">{{ t('save') }}</button>
+      </form>
+    </section>
+
+    <section class="card" data-testid="orders-card">
+      <h2 class="card-h">{{ icon("package") }} {{ t('my_orders') }}</h2>
+      {%- if orders %}
+      <div class="table-wrap">
+        <table class="table" id="orders-table" data-testid="orders-table">
+          <thead><tr><th>{{ t('order_no') }}</th><th>{{ t('date') }}</th><th>{{ t('items') }}</th><th>{{ t('status') }}</th><th class="num">{{ t('total') }}</th><th></th></tr></thead>
+          <tbody>
+          {%- for o in orders %}
+            <tr data-testid="order-row" data-order-id="{{ o.id }}">
+              <td><b>#{{ o.id }}</b></td>
+              <td>{{ o.created_at | date }}</td>
+              <td>{{ o.item_count }}</td>
+              <td><span class="status status-{{ o.status }}">{{ t('status_' ~ o.status) }}</span></td>
+              <td class="num">{{ o.total | money }}</td>
+              <td class="num"><a class="link-arrow" href="{{ url_for('account.order', order_id=o.id) }}" data-testid="order-link">{{ t('details') }} {{ icon("arrow-right", "icon-sm") }}</a></td>
+            </tr>
+          {%- endfor %}
+          </tbody>
+        </table>
+      </div>
+      {%- else %}
+      <div class="empty-state empty-sm" data-testid="no-orders"><div class="empty-emoji" aria-hidden="true">📦</div><p class="muted">{{ t('no_orders') }}</p></div>
+      {%- endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

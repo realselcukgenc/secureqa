@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_art with context %}
+{% block title %}{{ t('nav_admin') }}{% endblock %}
+{% block page_class %}admin{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">{{ icon("shield", "icon-sm") }} {{ t('admin_only') }}</span>
+    <h1>{{ t('admin_title') }}</h1>
+    <p class="muted">{{ t('admin_sub', name=g.user.username) }}</p>
+  </div>
+</section>
+<div class="container" id="admin-panel" data-testid="admin-panel">
+  <div class="stat-grid">
+    <div class="stat card" data-testid="stat-revenue"><span class="stat-icon art-1">{{ icon("chart") }}</span><div><span class="stat-label">{{ t('stat_revenue') }}</span><b class="stat-value">{{ stats.revenue | money }}</b></div></div>
+    <div class="stat card" data-testid="stat-orders"><span class="stat-icon art-6">{{ icon("package") }}</span><div><span class="stat-label">{{ t('stat_orders') }}</span><b class="stat-value">{{ stats.orders }}</b></div></div>
+    <div class="stat card" data-testid="stat-users"><span class="stat-icon art-4">{{ icon("users") }}</span><div><span class="stat-label">{{ t('stat_users') }}</span><b class="stat-value">{{ stats.users }}</b></div></div>
+    <div class="stat card" data-testid="stat-products"><span class="stat-icon art-8">{{ icon("grid") }}</span><div><span class="stat-label">{{ t('stat_products') }}</span><b class="stat-value">{{ stats.products }}</b></div></div>
+  </div>
+
+  <div class="admin-grid">
+    <section class="card" data-testid="chart-revenue">
+      <h2 class="card-h">{{ icon("chart") }} {{ t('revenue_by_category') }}</h2>
+      {#- A bar chart drawn with plain SVG; bar widths are computed on the server. -#}
+      <svg class="bar-chart" viewBox="0 0 520 {{ chart|length * 40 + 8 }}" role="img" aria-label="{{ t('revenue_by_category') }}">
+        {%- for row in chart %}
+        <g transform="translate(0 {{ loop.index0 * 40 + 4 }})">
+          <text class="bc-label" x="0" y="20">{{ t('cat_' ~ row.category) }}</text>
+          <rect class="bc-track" x="160" y="6" width="250" height="20" rx="6"/>
+          <rect class="bc-bar bc-{{ loop.index }}" x="160" y="6" width="{{ row.width }}" height="20" rx="6"/>
+          <text class="bc-value" x="520" y="20" text-anchor="end">{{ row.revenue | money }}</text>
+        </g>
+        {%- else %}
+        <text class="bc-label" x="0" y="20">—</text>
+        {%- endfor %}
+      </svg>
+    </section>
+
+    <section class="card" data-testid="low-stock">
+      <h2 class="card-h">{{ icon("alert") }} {{ t('low_stock_title') }}</h2>
+      <ul class="line-items compact">
+        {%- for p in low_stock %}
+        <li class="line-item">{{ product_art(p, "art-xs") }}<div class="li-info"><b>{{ p.name }}</b><span class="muted">{{ t('cat_' ~ p.category) }}</span></div><span class="stock-pill {{ 'is-out' if p.stock == 0 }}">{{ p.stock }}</span></li>
+        {%- endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <section class="card" data-testid="admin-orders">
+    <h2 class="card-h">{{ icon("package") }} {{ t('recent_orders') }}</h2>
+    <div class="table-wrap">
+      <table class="table" id="admin-orders-table">
+        <thead><tr><th>{{ t('order_no') }}</th><th>{{ t('customer') }}</th><th>{{ t('city') }}</th><th>{{ t('date') }}</th><th>{{ t('status') }}</th><th class="num">{{ t('total') }}</th></tr></thead>
+        <tbody>
+        {%- for o in orders %}
+          <tr data-testid="admin-order-row"><td><a href="{{ url_for('account.order', order_id=o.id) }}"><b>#{{ o.id }}</b></a></td><td>{{ o.username }}</td><td>{{ o.ship_city }}</td><td>{{ o.created_at | date }}</td><td><span class="status status-{{ o.status }}">{{ t('status_' ~ o.status) }}</span></td><td class="num">{{ o.total | money }}</td></tr>
+        {%- endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" data-testid="admin-users">
+    <h2 class="card-h">{{ icon("users") }} {{ t('users') }}</h2>
+    <div class="table-wrap">
+      {#- SECURITY: even admins never see password hashes — the query below does not select them. -#}
+      <table class="table" id="admin-users-table">
+        <thead><tr><th>ID</th><th>{{ t('username') }}</th><th>{{ t('email') }}</th><th>{{ t('role') }}</th><th class="num">{{ t('stat_orders') }}</th></tr></thead>
+        <tbody>
+        {%- for u in users %}
+          <tr data-testid="admin-user-row"><td>{{ u.id }}</td><td><span class="avatar avatar-sm avatar-{{ (u.id % 5) + 1 }}" aria-hidden="true">{{ u.username[:1] | upper }}</span> {{ u.username }}</td><td>{{ u.email }}</td><td><span class="chip chip-sm {{ 'chip-admin' if u.role == 'admin' }}">{{ t('role_' ~ u.role) }}</span></td><td class="num">{{ u.order_count }}</td></tr>
+        {%- endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

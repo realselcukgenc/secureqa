@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, logo %}
+{% from "_macros.html" import csrf_field, form_errors with context %}
+{% block title %}{{ t('register_title') }}{% endblock %}
+{% block page_class %}register{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card card" data-testid="register-card">
+    <div class="auth-head">
+      {{ logo() }}
+      <h1>{{ t('register_title') }}</h1>
+      <p class="muted">{{ t('register_sub') }}</p>
+    </div>
+    {{ form_errors(errors, 'register-error', 'register-error') }}
+    <form method="post" action="{{ url_for('auth.register') }}" class="form" id="register-form" data-testid="register-form" novalidate>
+      {{ csrf_field() }}
+      <div class="field">
+        <label for="username">{{ t('username') }}</label>
+        <div class="input-icon">{{ icon("user", "icon-sm") }}<input id="username" name="username" type="text" autocomplete="username" maxlength="20" required value="{{ form.username }}" data-testid="username-input"></div>
+        <small class="hint">{{ t('username_hint') }}</small>
+      </div>
+      <div class="field">
+        <label for="email">{{ t('email') }} <span class="muted">({{ t('optional') }})</span></label>
+        <div class="input-icon">{{ icon("mail", "icon-sm") }}<input id="email" name="email" type="email" autocomplete="email" maxlength="254" value="{{ form.email }}" data-testid="email-input"></div>
+      </div>
+      <div class="field">
+        <label for="password">{{ t('password') }}</label>
+        <div class="input-icon">{{ icon("lock", "icon-sm") }}<input id="password" name="password" type="password" autocomplete="new-password" maxlength="128" required data-testid="password-input" class="js-pw-meter">
+          <button class="input-action js-toggle-password" type="button" aria-label="{{ t('show_password') }}" data-target="password">{{ icon("eye", "icon-sm") }}</button></div>
+        <div class="pw-meter" aria-hidden="true" data-testid="password-meter"><span></span><span></span><span></span><span></span></div>
+        <ul class="pw-rules" data-testid="password-rules">
+          <li data-rule="length">{{ t('pw_rule_length') }}</li>
+          <li data-rule="letter">{{ t('pw_rule_letter') }}</li>
+          <li data-rule="digit">{{ t('pw_rule_digit') }}</li>
+        </ul>
+      </div>
+      <button class="btn btn-lg btn-primary btn-block" type="submit" id="register-btn" data-testid="register-submit">{{ t('register_btn') }}</button>
+    </form>
+    <p class="auth-switch">{{ t('have_account') }} <a href="{{ url_for('auth.login') }}" data-testid="go-login">{{ t('nav_login') }}</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_art, csrf_field, form_errors with context %}
+{% block title %}{{ t('step_checkout') }}{% endblock %}
+{% block page_class %}checkout{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ t('checkout_title') }}</h1>
+    <ol class="steps" aria-label="checkout steps"><li class="done">{{ t('step_cart') }}</li><li class="active">{{ t('step_checkout') }}</li><li>{{ t('step_done') }}</li></ol>
+  </div>
+</section>
+<div class="container">
+  <form class="cart-layout" method="post" action="{{ url_for('cart.checkout') }}" id="checkout-form" data-testid="checkout-form" autocomplete="off">
+    {{ csrf_field() }}
+    <div class="checkout-main">
+      {{ form_errors(errors, 'checkout-error', 'checkout-error') }}
+      <section class="card">
+        <h2 class="card-h">{{ icon("map") }} {{ t('shipping_address') }}</h2>
+        <div class="form-grid">
+          <div class="field span-2"><label for="ship_name">{{ t('full_name') }}</label><input id="ship_name" name="ship_name" maxlength="80" required value="{{ form.ship_name }}" autocomplete="name" data-testid="ship-name"></div>
+          <div class="field span-2"><label for="ship_address">{{ t('address') }}</label><input id="ship_address" name="ship_address" maxlength="200" required value="{{ form.ship_address }}" autocomplete="street-address" data-testid="ship-address"></div>
+          <div class="field"><label for="ship_city">{{ t('city') }}</label><input id="ship_city" name="ship_city" maxlength="60" required value="{{ form.ship_city }}" autocomplete="address-level2" data-testid="ship-city"></div>
+          <div class="field"><label for="ship_phone">{{ t('phone') }} <span class="muted">({{ t('optional') }})</span></label><input id="ship_phone" name="ship_phone" maxlength="20" value="{{ form.ship_phone }}" inputmode="tel" data-testid="ship-phone"></div>
+        </div>
+      </section>
+
+      <section class="card payment-card" data-testid="payment-section">
+        <h2 class="card-h">{{ icon("card") }} {{ t('payment') }} <span class="badge badge-demo" data-testid="demo-payment-badge">DEMO</span></h2>
+        <div class="alert alert-info" role="note" data-testid="demo-payment-note">{{ icon("info") }}<div>{{ t('demo_payment_note') }}</div></div>
+        <div class="payment-grid">
+          <div class="card-preview" aria-hidden="true" data-testid="card-preview">
+            <div class="cp-top"><span class="cp-chip"></span><span class="cp-brand">DEMO</span></div>
+            <div class="cp-number js-cp-number">4242 4242 4242 4242</div>
+            <div class="cp-bottom"><span class="js-cp-name">{{ form.ship_name or 'AD SOYAD' }}</span><span class="js-cp-exp">{{ form.card_exp }}</span></div>
+          </div>
+          <div class="form-grid">
+            {#- SECURITY/PRIVACY: this demo NEVER stores card data. Only the official test number is accepted
+                and only its last 4 digits are kept with the order. autocomplete="off" keeps real
+                saved cards from being auto-filled. -#}
+            <div class="field span-2"><label for="card_number">{{ t('card_number') }} <span class="muted">({{ t('test_card') }})</span></label><input id="card_number" name="card_number" inputmode="numeric" maxlength="19" required value="{{ form.card_number }}" autocomplete="off" class="js-card-number" data-testid="card-number"></div>
+            <div class="field"><label for="card_exp">{{ t('card_exp') }}</label><input id="card_exp" name="card_exp" maxlength="5" required value="{{ form.card_exp }}" placeholder="AA/YY" autocomplete="off" class="js-card-exp" data-testid="card-exp"></div>
+            <div class="field"><label for="card_cvc">CVC</label><input id="card_cvc" name="card_cvc" inputmode="numeric" maxlength="4" required value="{{ form.card_cvc }}" autocomplete="off" data-testid="card-cvc"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="card summary" data-testid="checkout-summary">
+      <h2 class="card-h">{{ t('order_summary') }}</h2>
+      <ul class="line-items compact">
+        {%- for l in lines %}
+        <li class="line-item" data-testid="checkout-item">{{ product_art(l.product, "art-xs") }}<div class="li-info"><b>{{ l.product.name }}</b><span class="muted">{{ l.qty }} × {{ l.product.price | money }}</span></div><span class="li-total">{{ l.total | money }}</span></li>
+        {%- endfor %}
+      </ul>
+      <div class="totals">
+        <div><span>{{ t('subtotal') }}</span><span>{{ total | money }}</span></div>
+        <div><span>{{ t('shipping') }}</span><span class="ok">{{ t('free') }}</span></div>
+        <div class="grand"><span>{{ t('total') }}</span><span data-testid="checkout-total">{{ total | money }}</span></div>
+      </div>
+      <button class="btn btn-lg btn-primary btn-block" type="submit" id="checkout-btn" data-testid="checkout-submit">{{ icon("lock", "icon-sm") }} {{ t('place_order') }}</button>
+      <p class="muted small pay-note">{{ icon("shield", "icon-sm") }} {{ t('no_real_payment') }}</p>
+    </aside>
+  </form>
+</div>
+{% endblock %}

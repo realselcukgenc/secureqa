@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecureQA Learn — Python for Test Automation</title>
+  <meta name="description" content="SecureQA projesi için etkileşimli Python rehberi: test otomasyonu ve güvenlik testleri odaklı. / Interactive Python guide for security-focused test automation.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2311172a'/%3E%3Cpath d='M32 10l18 7v13c0 12-8 20-18 24-10-4-18-12-18-24V17z' fill='none' stroke='%2322d3a6' stroke-width='4'/%3E%3Cpath d='M24 32l6 6 11-12' fill='none' stroke='%2322d3a6' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>
+    // Apply saved theme/lang before first paint (avoids a flash). Storage may be blocked -> try/catch.
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("secureqa.learn.v1") || "{}");
+        var theme = s.theme || (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("lang", s.lang === "en" ? "en" : "tr");
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">İçeriğe geç / Skip to content</a>
+
+  <header class="topbar">
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu" aria-controls="sidebar" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <a class="brand" href="#/" aria-label="SecureQA Learn">
+      <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6l21 8v15c0 14-9 23-21 28C20 52 11 43 11 29V14z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/><path d="M23 31l7 7 12-13" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="brand-text"><strong>SecureQA</strong> <span>Learn</span></span>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="py-status" id="py-status" data-state="idle" title="Python">
+      <span class="dot" aria-hidden="true"></span><span class="label" id="py-status-label">Python</span>
+    </div>
+    <div class="xp-chip" id="xp-chip" title="XP">
+      <span class="streak" id="streak-chip" aria-label="streak"></span>
+      <span class="xp" id="xp-value">0 XP</span>
+    </div>
+    <div class="seg" role="group" aria-label="Language / Dil">
+      <button type="button" class="seg-btn" data-lang="tr" id="lang-tr">TR</button>
+      <button type="button" class="seg-btn" data-lang="en" id="lang-en">EN</button>
+    </div>
+    <button class="icon-btn" id="theme-btn" aria-label="Tema / Theme">
+      <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Curriculum">
+      <div class="side-progress" id="side-progress"></div>
+      <nav class="side-nav" id="side-nav"></nav>
+      <div class="side-foot" id="side-foot"></div>
+    </aside>
+    <div class="scrim" id="scrim" hidden></div>
+    <main class="main" id="main" tabindex="-1">
+      <noscript><div class="banner warn">Bu site JavaScript gerektirir. / This site requires JavaScript.</div></noscript>
+      <div id="view"></div>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- Core -->
+  <script src="assets/registry.js"></script>
+  <script src="assets/highlight.js"></script>
+  <script src="assets/i18n.js"></script>
+  <!-- Lessons: add a new file here to extend the curriculum (order is taken from `num`). -->
+  <script src="lessons/_shared.js"></script>
+  <script src="lessons/01-variables.js"></script>
+  <script src="lessons/02-strings.js"></script>
+  <script src="lessons/03-collections.js"></script>
+  <script src="lessons/04-control-flow.js"></script>
+  <script src="lessons/05-functions.js"></script>
+  <script src="lessons/06-classes-pom.js"></script>
+  <script src="lessons/07-modules.js"></script>
+  <script src="lessons/08-exceptions.js"></script>
+  <script src="lessons/09-files-json.js"></script>
+  <script src="lessons/10-decorators-fixtures.js"></script>
+  <script src="lessons/11-pytest.js"></script>
+  <script src="lessons/12-playwright.js"></script>
+  <script src="lessons/13-http-requests.js"></script>
+  <script src="lessons/14-dataclasses.js"></script>
+  <script src="lessons/15-security-mindset.js"></script>
+  <script src="lessons/cheatsheet.js"></script>
+  <!-- Python runtime (Pyodide, loaded lazily) + app -->
+  <script src="assets/runtime.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

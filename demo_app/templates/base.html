@@ -1,0 +1,119 @@
+{%- from "_icons.html" import icon, logo -%}
+{%- from "_macros.html" import csrf_field with context -%}
+<!doctype html>
+<html lang="{{ lang }}" data-testid="html">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="{{ t('meta_description') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}{{ t('tagline') }}{% endblock %} · SecureShop</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {#- Tiny external script that applies the saved theme before first paint (no inline JS: CSP). -#}
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body class="page-{% block page_class %}default{% endblock %}" data-testid="page-{{ self.page_class() }}">
+  <a class="skip-link" href="#main">{{ t('skip_to_content') }}</a>
+
+  <div class="demo-bar" data-testid="demo-banner" role="note">
+    {{ icon("shield", "icon-sm") }}
+    <span>{{ t('demo_banner') }}</span>
+  </div>
+
+  <header class="site-header" data-testid="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{{ url_for('shop.index') }}" data-testid="nav-home" aria-label="SecureShop — {{ t('nav_home') }}">
+        {{ logo() }}<span class="brand-name">Secure<b>Shop</b></span>
+      </a>
+
+      <form class="header-search" action="{{ url_for('shop.products') }}" method="get" role="search">
+        <label class="sr-only" for="header-q">{{ t('search_label') }}</label>
+        {{ icon("search") }}
+        <input id="header-q" type="search" name="q" maxlength="80" placeholder="{{ t('search_placeholder') }}" value="{{ request.args.get('q', '') if request.endpoint == 'shop.products' else '' }}" data-testid="header-search-input">
+      </form>
+
+      <nav class="main-nav" id="main-nav" aria-label="{{ t('nav_main') }}" data-testid="main-nav">
+        <a href="{{ url_for('shop.index') }}" class="{{ 'active' if request.endpoint == 'shop.index' }}" data-testid="nav-link-home">{{ t('nav_home') }}</a>
+        <a href="{{ url_for('shop.products') }}" class="{{ 'active' if request.endpoint in ('shop.products', 'shop.product') }}" data-testid="nav-products">{{ t('nav_products') }}</a>
+        {%- if is_admin() %}
+        <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}" data-testid="nav-admin">{{ t('nav_admin') }}</a>
+        {%- endif %}
+        {%- if g.user %}
+        <a href="{{ url_for('account.account') }}" class="nav-mobile-only" data-testid="nav-account-mobile">{{ t('nav_account') }}</a>
+        <a href="{{ url_for('auth.logout') }}" class="nav-mobile-only" data-testid="nav-logout-mobile">{{ t('nav_logout') }}</a>
+        {%- else %}
+        <a href="{{ url_for('auth.login') }}" class="nav-mobile-only" data-testid="nav-login-mobile">{{ t('nav_login') }}</a>
+        {%- endif %}
+      </nav>
+
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="{{ t('language') }}" data-testid="lang-switcher">
+          <a href="{{ lang_url('tr') }}" class="{{ 'active' if lang == 'tr' }}" hreflang="tr" lang="tr" data-testid="lang-tr" id="lang-tr" {% if lang == 'tr' %}aria-current="true"{% endif %}>TR</a>
+          <a href="{{ lang_url('en') }}" class="{{ 'active' if lang == 'en' }}" hreflang="en" lang="en" data-testid="lang-en" id="lang-en" {% if lang == 'en' %}aria-current="true"{% endif %}>EN</a>
+        </div>
+        <button class="icon-btn" type="button" id="theme-toggle" data-testid="theme-toggle" aria-label="{{ t('toggle_theme') }}" title="{{ t('toggle_theme') }}">
+          {{ icon("moon", "only-light") }}{{ icon("sun", "only-dark") }}
+        </button>
+        <a class="icon-btn cart-btn" href="{{ url_for('cart.view') }}" data-testid="nav-cart" aria-label="{{ t('nav_cart') }}" title="{{ t('nav_cart') }}">
+          {{ icon("cart") }}
+          <span class="cart-count {{ 'is-empty' if not cart_count }}" id="cart-count" data-testid="cart-count">{{ cart_count }}</span>
+        </a>
+        {%- if g.user %}
+        <a class="user-pill" href="{{ url_for('account.account') }}" data-testid="nav-account" title="{{ t('nav_account') }}">
+          <span class="avatar" aria-hidden="true">{{ g.user.username[:1] | upper }}</span>
+          <span class="user-name" data-testid="nav-username">{{ g.user.username }}</span>
+        </a>
+        <a class="icon-btn" href="{{ url_for('auth.logout') }}" data-testid="nav-logout" aria-label="{{ t('nav_logout') }}" title="{{ t('nav_logout') }}">{{ icon("logout") }}</a>
+        {%- else %}
+        <a class="btn btn-sm btn-primary nav-login" href="{{ url_for('auth.login') }}" data-testid="nav-login">{{ icon("user", "icon-sm") }}<span>{{ t('nav_login') }}</span></a>
+        {%- endif %}
+        <button class="icon-btn menu-btn" type="button" id="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="{{ t('menu') }}" data-testid="menu-toggle">{{ icon("menu") }}</button>
+      </div>
+    </div>
+  </header>
+
+  {#- Flash messages become toast notifications (JS adds animation + auto-close). -#}
+  <div class="toast-stack" id="toast-stack" aria-live="polite" data-testid="toast-stack">
+    {%- for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="toast toast-{{ category }}" role="status" data-testid="toast" data-toast-type="{{ category }}">
+      {{ icon("check" if category == "success" else ("alert" if category == "error" else "info")) }}
+      <span class="toast-msg">{{ message }}</span>
+      <button class="toast-close" type="button" aria-label="{{ t('close') }}">{{ icon("x", "icon-sm") }}</button>
+    </div>
+    {%- endfor %}
+  </div>
+
+  <main id="main" class="site-main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer" data-testid="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand" href="{{ url_for('shop.index') }}">{{ logo() }}<span class="brand-name">Secure<b>Shop</b></span></a>
+        <p class="muted">{{ t('footer_about') }}</p>
+      </div>
+      <div>
+        <h4>{{ t('footer_shop') }}</h4>
+        <a href="{{ url_for('shop.products') }}">{{ t('all_products') }}</a>
+        <a href="{{ url_for('shop.products', cat='sweets') }}">{{ t('cat_sweets') }}</a>
+        <a href="{{ url_for('shop.products', cat='coffee') }}">{{ t('cat_coffee') }}</a>
+        <a href="{{ url_for('shop.products', cat='home') }}">{{ t('cat_home') }}</a>
+      </div>
+      <div>
+        <h4>{{ t('footer_security') }}</h4>
+        <span>{{ icon("check", "icon-sm") }} CSP · X-Frame-Options</span>
+        <span>{{ icon("check", "icon-sm") }} CSRF · SameSite</span>
+        <span>{{ icon("check", "icon-sm") }} {{ t('footer_ratelimit') }}</span>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© 2026 SecureShop · {{ t('footer_demo') }}</span>
+      <span>SecureQA · Selçuk Genç</span>
+    </div>
+  </footer>
+</body>
+</html>

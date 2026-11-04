@@ -1,0 +1,77 @@
+{#- Reusable template pieces. Autoescaping is on: every {{ value }} is HTML-escaped. -#}
+{% from "_icons.html" import icon %}
+
+{#- Hidden CSRF field — put it in EVERY <form method="post">. -#}
+{% macro csrf_field() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{#- Five stars for a rating 0..5 (supports halves). Pure CSS, no inline styles. -#}
+{% macro stars(rating, count=None, size="") -%}
+{%- set r = ((rating or 0) * 2) | round | int -%}
+<span class="stars {{ size }}" data-testid="rating" data-rating="{{ '%.1f' | format(rating or 0) }}" title="{{ '%.1f' | format(rating or 0) }} / 5">
+  <span class="sr-only">{{ t('rating_sr', rating='%.1f' | format(rating or 0)) }}</span>
+  {%- for i in range(1, 6) -%}
+    {%- if r >= i * 2 -%}<span class="star full" aria-hidden="true">★</span>
+    {%- elif r == i * 2 - 1 -%}<span class="star half" aria-hidden="true">★</span>
+    {%- else -%}<span class="star" aria-hidden="true">★</span>{%- endif -%}
+  {%- endfor -%}
+  {%- if count is not none %}<span class="stars-count">({{ count }})</span>{% endif -%}
+</span>
+{%- endmacro %}
+
+{#- The illustration: a gradient tile with a big emoji and decorative shapes. -#}
+{% macro product_art(p, size="") -%}
+<div class="product-art art-{{ p.art }} {{ size }}" data-testid="product-art">
+  <svg class="art-deco" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <circle cx="170" cy="30" r="46" fill="#fff" opacity=".14"/>
+    <circle cx="24" cy="180" r="60" fill="#fff" opacity=".10"/>
+    <path d="M0 140 Q50 110 100 140 T200 140 V200 H0z" fill="#fff" opacity=".08"/>
+    <!-- an eight-pointed "Seljuk star": two overlapping squares -->
+    <g fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2" transform="translate(162 156)">
+      <rect x="-16" y="-16" width="32" height="32"/>
+      <rect x="-16" y="-16" width="32" height="32" transform="rotate(45)"/>
+      <circle r="5"/>
+    </g>
+  </svg>
+  <span class="art-emoji" role="img" aria-label="{{ p.name }}">{{ p.emoji }}</span>
+</div>
+{%- endmacro %}
+
+{#- One product card in a grid. -#}
+{% macro product_card(p) -%}
+<article class="product-card" data-testid="product-card" data-product-id="{{ p.id }}">
+  <a class="card-media" href="{{ url_for('shop.product', product_id=p.id) }}" tabindex="-1" aria-hidden="true">
+    {{ product_art(p) }}
+    {%- if p.old_price %}<span class="badge badge-sale" data-testid="sale-badge">-{{ p.discount }}%</span>{% endif -%}
+    {%- if p.stock == 0 %}<span class="badge badge-muted">{{ t('out_of_stock') }}</span>{% endif -%}
+  </a>
+  <div class="card-body">
+    <span class="chip chip-sm">{{ t('cat_' ~ p.category) }}</span>
+    <h3 class="card-title" data-testid="product-name"><a href="{{ url_for('shop.product', product_id=p.id) }}" data-testid="product-link">{{ p.name }}</a></h3>
+    {{ stars(p.rating, p.review_count) }}
+    <div class="card-foot">
+      <div class="price-wrap">
+        <span class="price" data-testid="product-price">{{ p.price | money }}</span>
+        {%- if p.old_price %}<span class="old-price">{{ p.old_price | money }}</span>{% endif -%}
+      </div>
+      {%- if p.stock > 0 %}
+      <form method="post" action="{{ url_for('cart.add', product_id=p.id) }}" class="js-add-to-cart">
+        {{ csrf_field() }}
+        <button class="btn btn-icon btn-primary" type="submit" data-testid="add-to-cart" data-product-id="{{ p.id }}" aria-label="{{ t('add_to_cart') }}: {{ p.name }}" title="{{ t('add_to_cart') }}">{{ icon("plus") }}</button>
+      </form>
+      {%- endif %}
+    </div>
+  </div>
+</article>
+{%- endmacro %}
+
+{#- Error / notice box for forms. -#}
+{% macro form_errors(errors, id, testid) -%}
+{%- if errors %}
+<div class="alert alert-error" id="{{ id }}" data-testid="{{ testid }}" role="alert">
+  {{ icon("alert") }}
+  <div>{% if errors|length == 1 %}{{ errors[0] }}{% else %}<ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div>
+</div>
+{%- endif %}
+{%- endmacro %}

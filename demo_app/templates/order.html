@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_art with context %}
+{% block title %}{{ t('order_no') }} #{{ order.id }}{% endblock %}
+{% block page_class %}order{% endblock %}
+{% block content %}
+<div class="container narrow">
+  {%- if just_placed %}
+  <section class="confirmation card" id="order-confirmation" data-testid="order-confirmation" role="status">
+    <div class="confetti" aria-hidden="true">🎉</div>
+    <h1>{{ t('order_thanks') }}</h1>
+    <p>{{ t('order_placed', id=order.id) }}</p>
+    <p class="muted">{{ t('order_demo_note') }}</p>
+  </section>
+  {%- endif %}
+
+  <nav class="breadcrumb" aria-label="breadcrumb"><a href="{{ url_for('account.account') }}">{{ t('nav_account') }}</a><span>/</span><span>{{ t('order_no') }} #{{ order.id }}</span></nav>
+  <section class="card order-card" id="order-detail" data-testid="order-detail" data-order-id="{{ order.id }}">
+    <header class="order-head">
+      <div>
+        <h2 data-testid="order-number">{{ t('order_no') }} #{{ order.id }}</h2>
+        <span class="muted">{{ order.created_at | date }}</span>
+      </div>
+      <span class="status status-{{ order.status }}" data-testid="order-status">{{ t('status_' ~ order.status) }}</span>
+    </header>
+    <ul class="line-items">
+      {%- for it in items %}
+      <li class="line-item" data-testid="order-item">
+        {{ product_art(it, "art-sm") }}
+        <div class="li-info"><b>{{ it.name }}</b><span class="muted">{{ it.qty }} × {{ it.unit_price | money }}</span></div>
+        <span class="li-total">{{ (it.qty * it.unit_price) | money }}</span>
+      </li>
+      {%- endfor %}
+    </ul>
+    <div class="order-foot">
+      <div class="ship-box">
+        <h3>{{ icon("map", "icon-sm") }} {{ t('shipping_address') }}</h3>
+        <p>{{ order.ship_name }}<br>{{ order.ship_address }}<br>{{ order.ship_city }}</p>
+        <p class="muted">{{ icon("card", "icon-sm") }} •••• {{ order.card_last4 }} ({{ t('demo_card') }})</p>
+      </div>
+      <div class="totals">
+        <div><span>{{ t('subtotal') }}</span><span>{{ order.total | money }}</span></div>
+        <div><span>{{ t('shipping') }}</span><span>{{ t('free') }}</span></div>
+        <div class="grand"><span>{{ t('total') }}</span><span data-testid="order-total">{{ order.total | money }}</span></div>
+      </div>
+    </div>
+  </section>
+  <p class="center"><a class="btn btn-ghost" href="{{ url_for('shop.products') }}">{{ t('continue_shopping') }}</a></p>
+</div>
+{% endblock %}

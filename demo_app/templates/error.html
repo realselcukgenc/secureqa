@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ code }}{% endblock %}
+{% block page_class %}error{% endblock %}
+{% block content %}
+{#- SECURITY: a friendly page with NO stack trace, file paths or versions (no info disclosure). -#}
+<div class="container error-page" data-testid="error-page" data-status="{{ code }}">
+  <div class="error-emoji" aria-hidden="true">{{ emoji }}</div>
+  <p class="error-code" id="error-code" data-testid="error-code">{{ code }}</p>
+  <h1 data-testid="error-title">{{ title }}</h1>
+  <p class="muted" data-testid="error-message">{{ message }}</p>
+  <div class="hero-cta center">
+    <a class="btn btn-primary" href="{{ url_for('shop.index') }}">{{ t('back_home') }}</a>
+    <a class="btn btn-ghost" href="{{ url_for('shop.products') }}">{{ t('all_products') }}</a>
+  </div>
+</div>
+{% endblock %}

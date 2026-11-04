@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_card, product_art with context %}
+{% block title %}{{ t('tagline') }}{% endblock %}
+{% block page_class %}home{% endblock %}
+{% block content %}
+<section class="hero" data-testid="hero">
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <span class="eyebrow">{{ icon("sparkle", "icon-sm") }} {{ t('hero_eyebrow') }}</span>
+      <h1 class="hero-title" data-testid="hero-title">{{ t('hero_title_1') }} <span class="grad-text">{{ t('hero_title_2') }}</span></h1>
+      <p class="hero-sub">{{ t('hero_sub') }}</p>
+      <div class="hero-cta">
+        <a class="btn btn-lg btn-primary" href="{{ url_for('shop.products') }}" data-testid="hero-shop-btn">{{ t('hero_cta') }} {{ icon("arrow-right") }}</a>
+        <a class="btn btn-lg btn-ghost" href="#security" data-testid="hero-security-btn">{{ icon("shield") }} {{ t('hero_cta_2') }}</a>
+      </div>
+      <ul class="hero-stats">
+        <li><b>{{ stats.products }}</b><span>{{ t('hero_stat_products') }}</span></li>
+        <li><b>{{ '%.1f' | format(stats.rating) }}★</b><span>{{ t('hero_stat_rating') }}</span></li>
+        <li><b>81</b><span>{{ t('hero_stat_cities') }}</span></li>
+      </ul>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="hero-blob"></div>
+      {%- for p in hero_products %}
+      <div class="hero-tile hero-tile-{{ loop.index }}">{{ product_art(p) }}<span class="hero-tile-label">{{ p.name }}<b>{{ p.price | money }}</b></span></div>
+      {%- endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="container perks" data-testid="perks">
+  <div class="perk">{{ icon("truck") }}<div><b>{{ t('perk_ship') }}</b><span>{{ t('perk_ship_sub') }}</span></div></div>
+  <div class="perk">{{ icon("lock") }}<div><b>{{ t('perk_secure') }}</b><span>{{ t('perk_secure_sub') }}</span></div></div>
+  <div class="perk">{{ icon("heart") }}<div><b>{{ t('perk_hand') }}</b><span>{{ t('perk_hand_sub') }}</span></div></div>
+  <div class="perk">{{ icon("refresh") }}<div><b>{{ t('perk_return') }}</b><span>{{ t('perk_return_sub') }}</span></div></div>
+</section>
+
+<section class="container section" data-testid="categories">
+  <div class="section-head"><h2>{{ t('shop_by_category') }}</h2></div>
+  <div class="cat-grid">
+    {%- for c in categories %}
+    <a class="cat-tile art-{{ c.art }}" href="{{ url_for('shop.products', cat=c.key) }}" data-testid="category-{{ c.key }}">
+      <span class="cat-emoji" aria-hidden="true">{{ c.emoji }}</span>
+      <span class="cat-name">{{ t('cat_' ~ c.key) }}</span>
+      <span class="cat-count">{{ t('n_products', n=c.count) }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="container section" data-testid="featured">
+  <div class="section-head">
+    <h2>{{ t('featured') }}</h2>
+    <a class="link-arrow" href="{{ url_for('shop.products') }}" data-testid="see-all">{{ t('see_all') }} {{ icon("arrow-right", "icon-sm") }}</a>
+  </div>
+  <div class="product-grid" id="featured-products" data-testid="featured-grid">
+    {%- for p in featured %}{{ product_card(p) }}{% endfor %}
+  </div>
+</section>
+
+<section class="container section" id="security" data-testid="security-section">
+  <div class="security-panel">
+    <div class="security-intro">
+      <span class="eyebrow eyebrow-light">{{ icon("shield", "icon-sm") }} {{ t('sec_eyebrow') }}</span>
+      <h2>{{ t('sec_title') }}</h2>
+      <p>{{ t('sec_sub') }}</p>
+    </div>
+    <ul class="security-list">
+      {%- for key in ['csp', 'csrf', 'sqli', 'xss', 'authz', 'rate'] %}
+      <li data-testid="security-item-{{ key }}">{{ icon("check") }}<div><b>{{ t('sec_' ~ key) }}</b><span>{{ t('sec_' ~ key ~ '_sub') }}</span></div></li>
+      {%- endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

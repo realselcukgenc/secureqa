@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_art, csrf_field with context %}
+{% block title %}{{ t('nav_cart') }}{% endblock %}
+{% block page_class %}cart{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ t('cart_title') }}</h1>
+    <ol class="steps" aria-label="checkout steps"><li class="active">{{ t('step_cart') }}</li><li>{{ t('step_checkout') }}</li><li>{{ t('step_done') }}</li></ol>
+  </div>
+</section>
+<div class="container">
+  {%- if lines %}
+  <div class="cart-layout">
+    <section class="card" id="cart" data-testid="cart">
+      <ul class="line-items">
+        {%- for l in lines %}
+        <li class="line-item" data-testid="cart-item" data-product-id="{{ l.product.id }}">
+          <a href="{{ url_for('shop.product', product_id=l.product.id) }}" tabindex="-1" aria-hidden="true">{{ product_art(l.product, "art-sm") }}</a>
+          <div class="li-info">
+            <a href="{{ url_for('shop.product', product_id=l.product.id) }}" data-testid="cart-item-name"><b>{{ l.product.name }}</b></a>
+            <span class="muted">{{ l.product.price | money }}</span>
+          </div>
+          <form class="qty-form" method="post" action="{{ url_for('cart.update', product_id=l.product.id) }}">
+            {{ csrf_field() }}
+            <div class="qty qty-sm">
+              <button class="qty-btn js-qty-dec" type="button" aria-label="-">{{ icon("minus", "icon-sm") }}</button>
+              <label class="sr-only" for="qty-{{ l.product.id }}">{{ t('quantity') }}</label>
+              <input id="qty-{{ l.product.id }}" name="qty" type="number" min="1" max="10" value="{{ l.qty }}" class="js-autosubmit" data-testid="cart-qty">
+              <button class="qty-btn js-qty-inc" type="button" aria-label="+">{{ icon("plus", "icon-sm") }}</button>
+            </div>
+            <noscript><button class="btn btn-sm" type="submit">{{ t('update') }}</button></noscript>
+          </form>
+          <span class="li-total" data-testid="cart-line-total">{{ l.total | money }}</span>
+          <form method="post" action="{{ url_for('cart.remove', product_id=l.product.id) }}">
+            {{ csrf_field() }}
+            <button class="icon-btn icon-btn-danger" type="submit" aria-label="{{ t('remove') }}" title="{{ t('remove') }}" data-testid="cart-remove">{{ icon("trash", "icon-sm") }}</button>
+          </form>
+        </li>
+        {%- endfor %}
+      </ul>
+    </section>
+    <aside class="card summary" data-testid="cart-summary">
+      <h2 class="card-h">{{ t('order_summary') }}</h2>
+      <div class="totals">
+        <div><span>{{ t('subtotal') }} ({{ t('n_items', n=cart_count) }})</span><span>{{ total | money }}</span></div>
+        <div><span>{{ t('shipping') }}</span><span class="ok">{{ t('free') }}</span></div>
+        <div class="grand"><span>{{ t('total') }}</span><span id="cart-total" data-testid="cart-total">{{ total | money }}</span></div>
+      </div>
+      <a class="btn btn-lg btn-primary btn-block" href="{{ url_for('cart.checkout') }}" id="go-checkout" data-testid="go-checkout">{{ icon("lock", "icon-sm") }} {{ t('to_checkout') }}</a>
+      <a class="btn btn-ghost btn-block" href="{{ url_for('shop.products') }}">{{ t('continue_shopping') }}</a>
+    </aside>
+  </div>
+  {%- else %}
+  <div class="empty-state" data-testid="cart-empty" id="cart-empty">
+    <div class="empty-emoji" aria-hidden="true">🛒</div>
+    <h2>{{ t('cart_empty') }}</h2>
+    <p class="muted">{{ t('cart_empty_sub') }}</p>
+    <a class="btn btn-primary" href="{{ url_for('shop.products') }}">{{ t('hero_cta') }}</a>
+  </div>
+  {%- endif %}
+</div>
+{% endblock %}

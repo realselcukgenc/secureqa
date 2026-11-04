@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, logo %}
+{% from "_macros.html" import csrf_field with context %}
+{% block title %}{{ t('login_title') }}{% endblock %}
+{% block page_class %}login{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card card" data-testid="login-card">
+    <div class="auth-head">
+      {{ logo() }}
+      <h1>{{ t('login_title') }}</h1>
+      <p class="muted">{{ t('login_sub') }}</p>
+    </div>
+    {%- if error %}
+    {#- SECURITY: one generic message for "unknown user" AND "wrong password" (no user enumeration). -#}
+    <div class="alert alert-error" id="login-error" data-testid="login-error" role="alert">{{ icon("alert") }}<div>{{ error }}</div></div>
+    {%- endif %}
+    <form method="post" action="{{ url_for('auth.login', next=next_url if next_url != '/' else None) }}" class="form" id="login-form" data-testid="login-form" novalidate>
+      {{ csrf_field() }}
+      <div class="field">
+        <label for="username">{{ t('username') }}</label>
+        <div class="input-icon">{{ icon("user", "icon-sm") }}<input id="username" name="username" type="text" autocomplete="username" maxlength="50" required value="{{ username }}" data-testid="username-input" autofocus></div>
+      </div>
+      <div class="field">
+        <label for="password">{{ t('password') }}</label>
+        <div class="input-icon">{{ icon("lock", "icon-sm") }}<input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required data-testid="password-input">
+          <button class="input-action js-toggle-password" type="button" aria-label="{{ t('show_password') }}" data-target="password">{{ icon("eye", "icon-sm") }}</button></div>
+      </div>
+      <button class="btn btn-lg btn-primary btn-block" type="submit" id="login-btn" data-testid="login-submit">{{ t('login_btn') }}</button>
+    </form>
+    <p class="auth-switch">{{ t('no_account') }} <a href="{{ url_for('auth.register') }}" data-testid="go-register">{{ t('register_link') }}</a></p>
+
+    <details class="demo-accounts" data-testid="demo-accounts">
+      <summary>{{ icon("info", "icon-sm") }} {{ t('demo_accounts') }}</summary>
+      <p class="muted">{{ t('demo_accounts_sub') }}</p>
+      <div class="demo-account-list">
+        <button type="button" class="demo-account js-fill-login" data-user="admin" data-pass="admin123" data-testid="demo-fill-admin"><b>admin</b><span>admin123 · {{ t('role_admin') }}</span></button>
+        <button type="button" class="demo-account js-fill-login" data-user="selcuk" data-pass="Selcuk!2026" data-testid="demo-fill-selcuk"><b>selcuk</b><span>Selcuk!2026 · {{ t('role_user') }}</span></button>
+        <button type="button" class="demo-account js-fill-login" data-user="ayse" data-pass="ayse2026" data-testid="demo-fill-ayse"><b>ayse</b><span>ayse2026 · {{ t('role_user') }}</span></button>
+      </div>
+    </details>
+  </div>
+</div>
+{% endblock %}

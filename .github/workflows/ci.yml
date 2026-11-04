@@ -1,0 +1,107 @@
+name: SecureQA CI
+
+# Run on pushes and pull requests to the main branch. (TR: ana dala push/PR olunca çalışır.)
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  # --------------------------------------------------------------- SecureShop (required)
+  secureshop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # In CI we install the bundled Chromium (unlike the local sandbox). Because
+      # PW_CHROMIUM_PATH is not set, the framework uses this browser automatically.
+      - name: Install Playwright Chromium
+        run: playwright install --with-deps chromium
+
+      - name: Functional tests (must pass)
+        run: python -m pytest -m functional
+
+      - name: Defensive security regression checks (must pass)
+        run: python -m pytest -m security
+
+      - name: Upload SecureShop report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secureqa-secureshop-report
+          path: |
+            reports/security-report.html
+            reports/findings.json
+          if-no-files-found: warn
+
+  # --------------------------------------------------------------- Juice Shop (optional)
+  juiceshop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Juice Shop runs as a Docker service on port 3000. Findings are EXPECTED here, so we
+    # do not let expected failures fail the job (the suite records findings for the report).
+    services:
+      juiceshop:
+        image: bkimminich/juice-shop:latest
+        ports:
+          - 3000:3000
+    env:
+      JUICE_SHOP_URL: http://127.0.0.1:3000
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: playwright install --with-deps chromium
+
+      - name: Wait for Juice Shop to be ready
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3000/rest/admin/application-version >/dev/null; then
+              echo "Juice Shop is up"; exit 0
+            fi
+            sleep 3
+          done
+          echo "Juice Shop did not become ready"; exit 1
+
+      - name: Attack Juice Shop (findings expected — informational)
+        run: python -m pytest -m juiceshop --no-server || true
+
+      - name: Build comparison report
+        if: always()
+        run: python run.py compare || true
+
+      - name: Upload Juice Shop report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secureqa-juiceshop-report
+          path: |
+            reports/security-report.html
+            reports/comparison-report.html
+            reports/findings.json
+          if-no-files-found: warn
