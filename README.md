@@ -46,6 +46,8 @@ python run.py compare      # SecureShop ile Juice Shop karşılaştırması
 
 **Python rehberi:** `learn/index.html` dosyasını tarayıcıda aç. Python ilk açılışta `cdn.jsdelivr.net` adresinden yüklenir, bu yüzden internet gerekir.
 
+**Canlıya alma / Deploy:** SecureShop'u ücretsiz bir sunucuda (Render, Fly.io) yayınlamak ya da Docker ile yerel çalıştırmak için adım adım rehber: [DEPLOY.md](DEPLOY.md).
+
 ### Test sonuçları (bu sürüm)
 
 - SecureShop: **28 test geçti**, 0 başarısız (10 fonksiyonel + 18 savunma kontrolü).
