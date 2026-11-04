@@ -47,6 +47,7 @@ def pytest_configure(config: pytest.Config) -> None:
     markers = [
         "functional: normal behaviour tests against SecureShop (login, search, cart, i18n).",
         "security: a defensive regression check against SecureShop (should PASS).",
+        "visual: responsive-layout and visual-regression (screenshot) checks against SecureShop.",
         "juiceshop: an attack against OWASP Juice Shop (a finding is EXPECTED).",
         "owasp_a01: Broken Access Control.",
         "owasp_a02: Cryptographic Failures.",

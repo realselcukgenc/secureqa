@@ -38,6 +38,19 @@ jobs:
       - name: Defensive security regression checks (must pass)
         run: python -m pytest -m security
 
+      # Responsive-layout + visual-regression checks. Deterministic and headless-safe:
+      # the committed baselines were captured on ubuntu-24.04 with this same Chromium.
+      - name: Responsive + visual-regression tests (must pass)
+        run: python -m pytest -m visual
+
+      - name: Upload visual diffs (only on mismatch)
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: secureqa-visual-diffs
+          path: tests/visual/diffs/
+          if-no-files-found: ignore
+
       - name: Upload SecureShop report
         if: always()
         uses: actions/upload-artifact@v5
