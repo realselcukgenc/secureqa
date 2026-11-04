@@ -29,6 +29,11 @@ instance/
 test-results/
 playwright-report/
 
+# Visual regression diff images (baselines ARE committed; diffs are generated on mismatch)
+# TR: görsel karşılaştırma fark görüntüleri (referanslar depoda tutulur, farklar üretilir)
+tests/visual/diffs/*
+!tests/visual/diffs/.gitkeep
+
 # OS noise
 .DS_Store
 Thumbs.db
