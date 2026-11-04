@@ -49,7 +49,7 @@ python run.py compare      # SecureShop ile Juice Shop karşılaştırması
 ### Test sonuçları (bu sürüm)
 
 - SecureShop: **28 test geçti**, 0 başarısız (10 fonksiyonel + 18 savunma kontrolü).
-- Juice Shop: 6 test yazıldı. Geliştirme ortamında Juice Shop başlatılamadığı için bu testler henüz gerçek bir Juice Shop'a karşı çalıştırılmadı. İlk gerçek koşum yerelde ya da CI'da yapılacak.
+- Juice Shop (GitHub Actions, Docker servisi): **5 challenge doğrulandı** (DOM XSS, SQL injection ile admin girişi, gizli belge erişimi, açık `/metrics` ucu, ayrıntılı hata mesajları), 1 test atlandı (Admin Section: önce oturum açılmış bir tarayıcı gerektiriyor).
 
 ### Güvenlik notu
 
@@ -81,7 +81,7 @@ Run the suites only against systems you own or are authorized to test.
 ### Status
 
 - SecureShop: 28 passed, 0 failed.
-- Juice Shop: the suite has not yet run against a live instance. It runs in CI through a Docker service and locally via `JUICE_SHOP_URL`.
+- Juice Shop (GitHub Actions with a Docker service): 5 challenges confirmed solved (DOM XSS, SQLi admin login, confidential document, exposed metrics, verbose errors); 1 skipped (Admin Section needs an authenticated browser session).
 
 ---
 
