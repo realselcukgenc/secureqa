@@ -9,6 +9,8 @@
 
 **Python + Playwright + pytest ile güvenlik odaklı test otomasyonu** · *Security-focused test automation with Python, Playwright and pytest*
 
+🌐 **Canlı site / Live site:** [realselcukgenc.github.io/secureqa](https://realselcukgenc.github.io/secureqa/) · **İnteraktif Python rehberi / Interactive Python guide:** [.../secureqa/learn/](https://realselcukgenc.github.io/secureqa/learn/) — *tarayıcıda, indirmeden / in your browser, no download*
+
 [🇹🇷 Türkçe](#-türkçe) · [🇬🇧 English](#-english)
 
 [![SecureQA demo](docs/demo/secureqa-demo.gif)](docs/demo/secureqa-demo.mp4)

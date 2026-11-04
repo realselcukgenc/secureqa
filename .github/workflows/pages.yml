@@ -1,0 +1,69 @@
+name: Deploy GitHub Pages
+
+# Publishes the SecureQA showcase landing (site/index.html) and the interactive
+# Python guide (learn/) to GitHub Pages on every push to main.
+# TR: her main push'unda SecureQA tanıtım sayfasını ve interaktif Python rehberini yayınlar.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "learn/**"
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch: {}
+
+# Least-privilege permissions required by the official Pages deploy flow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; let an in-progress production run finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # enablement: true auto-enables GitHub Pages on the first run, so no manual
+      # repo Settings -> Pages step is needed.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Assemble _site so the landing's RELATIVE links resolve under /secureqa/:
+      #   _site/index.html         <- site/index.html (landing / root)
+      #   _site/learn/...          <- learn/ (interactive guide)
+      #   _site/docs/demo/...      <- demo GIF/MP4 referenced by the landing
+      #   _site/docs/screenshots/  <- screenshots referenced by the landing
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site/docs
+          cp site/index.html _site/index.html
+          cp -r learn _site/learn
+          cp -r docs/demo _site/docs/demo
+          cp -r docs/screenshots _site/docs/screenshots
+          echo "Assembled _site:"
+          find _site -maxdepth 2 -type d | sort
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

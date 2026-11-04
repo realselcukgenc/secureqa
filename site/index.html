@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecureQA — Güvenlik Odaklı Test Otomasyonu / Security-Focused Test Automation</title>
+  <meta name="description" content="SecureQA: Python, Playwright ve pytest ile güvenlik odaklı test otomasyonu portföyü + tarayıcıda çalışan interaktif Python rehberi. / Security-focused test automation portfolio with an interactive in-browser Python guide.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="author" content="Selçuk Genç">
+  <meta property="og:title" content="SecureQA — Security-Focused Test Automation">
+  <meta property="og:description" content="Python + Playwright + pytest security testing portfolio with an interactive in-browser Python guide.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2311172a'/%3E%3Cpath d='M32 10l18 7v13c0 12-8 20-18 24-10-4-18-12-18-24V17z' fill='none' stroke='%2322d3a6' stroke-width='4'/%3E%3Cpath d='M24 32l6 6 11-12' fill='none' stroke='%2322d3a6' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <script>
+    // Apply saved theme/lang before first paint to avoid a flash. Storage may be blocked -> try/catch.
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("secureqa.site.v1") || "{}");
+        var prefersLight = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches;
+        var theme = s.theme || (prefersLight ? "light" : "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("lang", s.lang === "en" ? "en" : "tr");
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      color-scheme: dark light;
+      --bg:        #0b0f1a;
+      --bg-2:      #11172a;
+      --panel:     #141c33;
+      --panel-2:   #1a2340;
+      --border:    #26304f;
+      --text:      #e8edf7;
+      --muted:     #9aa6c4;
+      --accent:    #22d3a6;
+      --accent-2:  #3b82f6;
+      --accent-ink:#06281f;
+      --danger:    #f87171;
+      --shadow:    0 18px 50px rgba(0,0,0,.45);
+      --radius:    18px;
+      --maxw:      1120px;
+    }
+    :root[data-theme="light"] {
+      --bg:        #f6f8fc;
+      --bg-2:      #ffffff;
+      --panel:     #ffffff;
+      --panel-2:   #f0f3fb;
+      --border:    #dbe2f0;
+      --text:      #16203a;
+      --muted:     #5b6480;
+      --accent:    #0f9c78;
+      --accent-2:  #2563eb;
+      --accent-ink:#ffffff;
+      --danger:    #c0392b;
+      --shadow:    0 18px 46px rgba(31,45,80,.14);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(900px 500px at 15% -5%, rgba(34,211,166,.14), transparent 60%),
+        radial-gradient(900px 600px at 95% 0%, rgba(59,130,246,.14), transparent 55%);
+      pointer-events: none;
+    }
+    code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+    a { color: inherit; }
+
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 16px; }
+
+    /* ---------- Header ---------- */
+    header.site {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display: flex; align-items: center; gap: 12px; padding: 12px 16px; max-width: var(--maxw); margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 800; letter-spacing: -.01em; }
+    .brand svg { color: var(--accent); flex: 0 0 auto; }
+    .brand span.sub { color: var(--muted); font-weight: 600; }
+    .nav-spacer { flex: 1; }
+    .ctrls { display: flex; align-items: center; gap: 8px; }
+
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--panel); }
+    .seg button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 13px; padding: 7px 13px; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+    .icon-btn { appearance: none; display: inline-grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); cursor: pointer; }
+    .icon-btn:hover { border-color: var(--accent); }
+    .icon-btn .i-moon { display: none; }
+    :root[data-theme="light"] .icon-btn .i-sun { display: none; }
+    :root[data-theme="light"] .icon-btn .i-moon { display: block; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 22px; border-radius: 14px; border: 1px solid var(--border);
+      font-weight: 700; font-size: 15px; text-decoration: none; cursor: pointer;
+      background: var(--panel); color: var(--text); transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    }
+    .btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .btn.primary { background: linear-gradient(135deg, var(--accent), #15b88c); color: var(--accent-ink); border-color: transparent; box-shadow: 0 10px 28px rgba(34,211,166,.3); }
+    .btn.ghost { background: transparent; }
+    .btn svg { width: 18px; height: 18px; }
+
+    /* ---------- Hero ---------- */
+    .hero { padding: 64px 0 36px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); padding: 6px 13px; border-radius: 999px; }
+    h1.title { font-size: clamp(32px, 6vw, 56px); line-height: 1.08; letter-spacing: -.02em; margin: 18px 0 14px; font-weight: 800; }
+    h1.title .grad { background: linear-gradient(120deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: clamp(16px, 2.4vw, 20px); color: var(--muted); max-width: 60ch; margin: 0 0 26px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; }
+    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; text-align: center; }
+    .stat b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(120deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat span { font-size: 13px; color: var(--muted); }
+
+    /* ---------- Section ---------- */
+    section { padding: 44px 0; }
+    .sec-head { max-width: 62ch; margin-bottom: 28px; }
+    .sec-head h2 { font-size: clamp(24px, 4vw, 34px); letter-spacing: -.02em; margin: 0 0 10px; }
+    .sec-head p { color: var(--muted); margin: 0; }
+
+    .card-figure { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+    .card-figure img { display: block; width: 100%; height: auto; }
+    .card-figure figcaption { padding: 13px 18px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--border); }
+
+    /* ---------- Feature grid ---------- */
+    .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .feature { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: transform .14s ease, border-color .14s ease; }
+    .feature:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+    .feature .ico { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 13px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); margin-bottom: 14px; }
+    .feature .ico svg { width: 24px; height: 24px; }
+    .feature h3 { margin: 0 0 8px; font-size: 19px; }
+    .feature p { margin: 0 0 6px; color: var(--muted); font-size: 15px; }
+    .feature .tag { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 14%, transparent); border-radius: 7px; padding: 3px 9px; font-family: "JetBrains Mono", monospace; }
+
+    /* ---------- Screenshots ---------- */
+    .shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+    .shot img { display: block; width: 100%; height: 220px; object-fit: cover; object-position: top; }
+    .shot .cap { padding: 12px 16px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--border); }
+
+    /* ---------- Guide callout ---------- */
+    .callout { background: linear-gradient(135deg, var(--panel-2), var(--panel)); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); padding: 36px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; align-items: center; }
+    .callout h2 { margin: 0 0 12px; font-size: clamp(22px, 3.4vw, 30px); letter-spacing: -.02em; }
+    .callout p { color: var(--muted); margin: 0 0 18px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .chip { font-size: 13px; font-weight: 600; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; color: var(--text); }
+    .chip b { color: var(--accent); }
+    .callout .pic { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .callout .pic img { display: block; width: 100%; height: auto; }
+
+    /* ---------- Footer ---------- */
+    footer.site { border-top: 1px solid var(--border); padding: 30px 0 48px; margin-top: 20px; }
+    .foot { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between; color: var(--muted); font-size: 14px; }
+    .foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .foot a:hover { text-decoration: underline; }
+    .foot .links { display: flex; gap: 18px; flex-wrap: wrap; }
+
+    .note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin-top: 14px; }
+
+    [data-lang-en] { display: none; }
+    :root[lang="en"] [data-lang-tr] { display: none; }
+    :root[lang="en"] [data-lang-en] { display: revert; }
+
+    @media (max-width: 860px) {
+      .callout { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .shots { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .hero { padding: 40px 0 24px; }
+      .features { grid-template-columns: 1fr; }
+      .shots { grid-template-columns: 1fr; }
+      .callout { padding: 24px; }
+      .brand span.sub { display: none; }
+      .cta .btn { flex: 1 1 auto; justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site">
+    <nav class="nav">
+      <a class="brand" href="#top" aria-label="SecureQA">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6l21 8v15c0 14-9 23-21 28C20 52 11 43 11 29V14z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/><path d="M23 31l7 7 12-13" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>SecureQA <span class="sub">· QA + Security</span></span>
+      </a>
+      <div class="nav-spacer"></div>
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="Language / Dil">
+          <button type="button" id="lang-tr" data-lang="tr" aria-pressed="true">TR</button>
+          <button type="button" id="lang-en" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <button class="icon-btn" id="theme-btn" aria-label="Tema / Theme">
+          <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <a id="top"></a>
+
+  <!-- ==================== HERO ==================== -->
+  <div class="wrap hero">
+    <span class="eyebrow">
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span data-lang-tr>Python · Playwright · pytest · OWASP</span>
+      <span data-lang-en>Python · Playwright · pytest · OWASP</span>
+    </span>
+
+    <h1 class="title">
+      <span data-lang-tr>Güvenlik odaklı <span class="grad">test otomasyonu</span></span>
+      <span data-lang-en>Security-focused <span class="grad">test automation</span></span>
+    </h1>
+
+    <p class="lead">
+      <span data-lang-tr>SecureQA, bir QA otomasyon mühendisinin güvenlik bilgisini otomasyona taşıdığı bir portföy projesidir: güvenli yazılmış SecureShop demo mağazası, OWASP Juice Shop'a karşı 42 challenge, yeniden kullanılabilir güvenlik çerçevesi ve tarayıcıda gerçek Python çalıştıran interaktif rehber.</span>
+      <span data-lang-en>SecureQA is a portfolio project that brings security testing into a QA automation workflow: a securely built SecureShop demo, 42 attacks against OWASP Juice Shop, a reusable security framework, and an interactive guide that runs real Python in your browser.</span>
+    </p>
+
+    <div class="cta">
+      <a class="btn primary" href="learn/">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4v16l14-8z" fill="currentColor"/></svg>
+        <span data-lang-tr>İnteraktif Python Rehberi</span>
+        <span data-lang-en>Interactive Python Guide</span>
+      </a>
+      <a class="btn" href="https://github.com/realselcukgenc/secureqa" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+        GitHub
+      </a>
+      <a class="btn ghost" href="#demo">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        <span data-lang-tr>Demoyu izle</span>
+        <span data-lang-en>Watch the demo</span>
+      </a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>28</b><span data-lang-tr>SecureShop testi geçti</span><span data-lang-en>SecureShop tests passing</span></div>
+      <div class="stat"><b>42</b><span data-lang-tr>Juice Shop challenge</span><span data-lang-en>Juice Shop challenges</span></div>
+      <div class="stat"><b>15+</b><span data-lang-tr>Python dersi</span><span data-lang-en>Python lessons</span></div>
+      <div class="stat"><b>31</b><span data-lang-tr>Otomatik alıştırma</span><span data-lang-en>Auto-checked exercises</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== DEMO ==================== -->
+  <section class="wrap" id="demo">
+    <div class="sec-head">
+      <h2 data-lang-tr>Uçtan uca demo</h2>
+      <h2 data-lang-en>End-to-end demo</h2>
+      <p data-lang-tr>SecureShop mağazasının (TR/karanlık mod, ürün, sepet, yönetim paneli, EN diline geçiş) ve tek dosyalık iki dilli HTML güvenlik raporunun turu.</p>
+      <p data-lang-en>A walkthrough of the SecureShop app (Turkish/dark mode, a product, add-to-cart, the admin dashboard, switching to English) and the self-contained bilingual HTML security report.</p>
+    </div>
+    <figure class="card-figure">
+      <img src="docs/demo/secureqa-demo.gif" alt="SecureQA demo: SecureShop app tour and security report" loading="lazy" width="1280" height="720">
+      <figcaption>
+        <span data-lang-tr>🎬 SecureShop + güvenlik raporu turu. Yüksek kalite için depodaki MP4'e bakın.</span>
+        <span data-lang-en>🎬 SecureShop + security report tour. See the repo for the higher-quality MP4.</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ==================== FEATURES ==================== -->
+  <section class="wrap" id="features">
+    <div class="sec-head">
+      <h2 data-lang-tr>Dört parça</h2>
+      <h2 data-lang-en>Four parts</h2>
+      <p data-lang-tr>Fonksiyonel testten savunma kontrollerine, saldırı senaryolarından öğrenmeye kadar tek bir iş akışı.</p>
+      <p data-lang-en>One workflow, from functional tests to defensive checks to attack scenarios to learning.</p>
+    </div>
+
+    <div class="features">
+      <article class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h18M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>🛒 SecureShop</h3>
+        <p data-lang-tr>Güvenli yazılmış, TR/EN, karanlık/aydınlık temalı Flask demo mağazası — fonksiyonel testlerin ve savunma kontrollerinin hedefi. CSP, güvenlik başlıkları, HttpOnly/SameSite çerezler, CSRF, parametreli SQL.</p>
+        <p data-lang-en>A securely built, bilingual, dark/light Flask demo shop — the target for functional tests and defensive regression checks: CSP and security headers, HttpOnly/SameSite cookies, CSRF, parameterized SQL.</p>
+        <span class="tag">demo_app/</span>
+      </article>
+
+      <article class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 2v6l-6 10a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-6-10V2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>🧪 SecureQA framework</h3>
+        <p data-lang-tr>Page Object Model, yeniden kullanılabilir güvenlik kontrolleri, OWASP Top 10 (2021) + CWE eşleştirmeli bulgular ve tek dosyalık iki dilli HTML rapor paneli (inline SVG grafikler, filtreler).</p>
+        <p data-lang-en>Page Object Model, reusable security checks, findings mapped to OWASP Top 10 2021 + CWE, and a self-contained bilingual HTML dashboard (inline SVG charts, filters).</p>
+        <span class="tag">secureqa/ · tests/</span>
+      </article>
+
+      <article class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3C8 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2-7-6-11z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+        <h3>🧃 OWASP Juice Shop</h3>
+        <p data-lang-tr>Bilerek açıklı eğitim uygulamasına karşı 42 challenge: SQLi, XSS, IDOR, yetki aşımı ve daha fazlası — her biri <code>/api/Challenges</code> ile doğrulanır ve CVSS 3.1 ile puanlanır.</p>
+        <p data-lang-en>42 challenges against the intentionally vulnerable training app: SQLi, XSS, IDOR, broken access control and more — each verified via <code>/api/Challenges</code> and scored with CVSS 3.1.</p>
+        <span class="tag">tests/juiceshop/</span>
+      </article>
+
+      <article class="feature">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h7v16H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v16h5a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+        <h3>📘 <span data-lang-tr>İnteraktif Python rehberi</span><span data-lang-en>Interactive Python guide</span></h3>
+        <p data-lang-tr>Tarayıcıda gerçek Python (Pyodide) çalıştıran 15+ ders, 31 otomatik kontrollü alıştırma, quiz'ler, XP ve rozetler. Dersler bu projenin kodunu satır satır açıklar.</p>
+        <p data-lang-en>15+ lessons running real Python in the browser (Pyodide), 31 auto-checked exercises, quizzes, XP and badges. Lessons explain this repo's real code line by line.</p>
+        <span class="tag">learn/</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- ==================== GUIDE CALLOUT ==================== -->
+  <section class="wrap">
+    <div class="callout">
+      <div>
+        <h2 data-lang-tr>Tarayıcında Python öğren — kurulum yok</h2>
+        <h2 data-lang-en>Learn Python in your browser — nothing to install</h2>
+        <p data-lang-tr>Rehber, Python'u ziyaretçinin tarayıcısında Pyodide ile çalıştırır. Kod yaz, çalıştır, anında geri bildirim al. Test otomasyonu ve güvenlik testleri odaklı, tamamen iki dilli.</p>
+        <p data-lang-en>The guide runs Python right in your browser with Pyodide. Write code, run it, get instant feedback. Focused on test automation and security testing, fully bilingual.</p>
+        <div class="chips">
+          <span class="chip"><b>▶</b> <span data-lang-tr>Çalıştırılabilir kod</span><span data-lang-en>Runnable code</span></span>
+          <span class="chip"><b>✓</b> <span data-lang-tr>Otomatik kontrol</span><span data-lang-en>Auto-grading</span></span>
+          <span class="chip"><b>★</b> XP + <span data-lang-tr>rozetler</span><span data-lang-en>badges</span></span>
+          <span class="chip"><b>TR</b> / EN</span>
+        </div>
+        <a class="btn primary" href="learn/">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4v16l14-8z" fill="currentColor"/></svg>
+          <span data-lang-tr>Rehberi aç</span>
+          <span data-lang-en>Open the guide</span>
+        </a>
+        <p class="note">
+          <span data-lang-tr>Python ilk açılışta <code>cdn.jsdelivr.net</code> adresinden tarayıcına yüklenir — internet gerekir.</span>
+          <span data-lang-en>Python loads into your browser from <code>cdn.jsdelivr.net</code> on first open — an internet connection is required.</span>
+        </p>
+      </div>
+      <div class="pic">
+        <img src="docs/screenshots/learn-home-dark.png" alt="SecureQA interactive Python guide home screen" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREENSHOTS ==================== -->
+  <section class="wrap" id="screens">
+    <div class="sec-head">
+      <h2 data-lang-tr>Ekran görüntüleri</h2>
+      <h2 data-lang-en>Screenshots</h2>
+      <p data-lang-tr>Mağaza, güvenlik raporu ve interaktif rehberden kareler.</p>
+      <p data-lang-en>A few frames from the shop, the security report and the interactive guide.</p>
+    </div>
+    <div class="shots">
+      <figure class="shot">
+        <img src="docs/screenshots/shop-admin-dark-en.png" alt="SecureShop admin dashboard" loading="lazy">
+        <figcaption class="cap"><span data-lang-tr>SecureShop yönetim paneli</span><span data-lang-en>SecureShop admin dashboard</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="docs/screenshots/report-cvss.png" alt="Security report with CVSS 3.1 scores" loading="lazy">
+        <figcaption class="cap"><span data-lang-tr>CVSS 3.1 puanlı güvenlik raporu</span><span data-lang-en>Security report with CVSS 3.1 scores</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="docs/screenshots/learn-lesson15-sqli.png" alt="Interactive lesson on SQL injection" loading="lazy">
+        <figcaption class="cap"><span data-lang-tr>SQLi dersi (rehber)</span><span data-lang-en>SQL injection lesson (guide)</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="site">
+    <div class="wrap foot">
+      <div>
+        <strong>SecureQA</strong> ·
+        <span data-lang-tr>Yazar</span><span data-lang-en>Author</span>:
+        <a href="https://github.com/realselcukgenc" target="_blank" rel="noopener">Selçuk Genç</a>
+        · MIT
+      </div>
+      <div class="links">
+        <a href="learn/"><span data-lang-tr>Python Rehberi</span><span data-lang-en>Python Guide</span></a>
+        <a href="https://github.com/realselcukgenc/secureqa" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/realselcukgenc/secureqa/blob/main/README.md" target="_blank" rel="noopener">README</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var KEY = "secureqa.site.v1";
+      function load() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
+      function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* ignore */ } }
+      var state = load();
+
+      // ---- Language ----
+      var btnTr = document.getElementById("lang-tr");
+      var btnEn = document.getElementById("lang-en");
+      function setLang(lang) {
+        lang = lang === "en" ? "en" : "tr";
+        root.setAttribute("lang", lang);
+        btnTr.setAttribute("aria-pressed", String(lang === "tr"));
+        btnEn.setAttribute("aria-pressed", String(lang === "en"));
+        state.lang = lang; save(state);
+      }
+      btnTr.addEventListener("click", function () { setLang("tr"); });
+      btnEn.addEventListener("click", function () { setLang("en"); });
+      setLang(state.lang || root.getAttribute("lang") || "tr");
+
+      // ---- Theme ----
+      var themeBtn = document.getElementById("theme-btn");
+      function setTheme(t) {
+        t = t === "light" ? "light" : "dark";
+        root.setAttribute("data-theme", t);
+        state.theme = t; save(state);
+      }
+      themeBtn.addEventListener("click", function () {
+        setTheme(root.getAttribute("data-theme") === "light" ? "dark" : "light");
+      });
+    })();
+  </script>
+</body>
+</html>
