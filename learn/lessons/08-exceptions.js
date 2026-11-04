@@ -100,14 +100,14 @@ response_text = "Traceback (most recent call last): ... sqlite3.OperationalError
 vulnerable = "OperationalError" in response_text
 
 try:
-    assert not vulnerable, "SQL injection in login form (error leaked)."
+    assert not vulnerable, "SQL error leaked from the login form."
     print("PASSED")
 except AssertionError as failure:
     print("FAILED:", failure)
 ` },
     { t: "callout", kind: "sec",
-      tr: `<p>Hata mesajları güvenlik açısından iki yönlüdür. Uygulama içeride exception'ı yakalamayıp kullanıcıya <strong>traceback gösterirse</strong> bu bir bilgi ifşası zafiyetidir (VulnShop'un <code>/debug</code> sayfası ve 500 hata sayfası gibi). SecureQA'nın SQLi kontrolü de tam olarak sızan <code>OperationalError</code> metnini arar: <em>error-based SQL injection</em>.</p>`,
-      en: `<p>Error messages cut both ways in security. If the app doesn't catch an exception internally and <strong>shows the traceback</strong> to the user, that's an information disclosure vulnerability (like VulnShop's <code>/debug</code> page and 500 error page). SecureQA's SQLi check looks exactly for the leaked <code>OperationalError</code> text: <em>error-based SQL injection</em>.</p>` },
+      tr: `<p>Hata mesajları güvenlik açısından iki yönlüdür. Uygulama içeride exception'ı yakalamayıp kullanıcıya <strong>traceback gösterirse</strong> bu bir bilgi ifşası zafiyetidir (OWASP Juice Shop'taki “Error Handling” challenge'ı tam olarak budur; projede <code>JuiceShopClient.provoke_error()</code> bunu bir bulgu olarak kaydeder). SecureShop ise exception'ları yakalayıp dostça bir hata sayfası gösterir; <code>tests/security/test_error_handling_defenses.py</code> sayfada traceback olmadığını doğrular. SecureQA'nın SQLi kontrolü de sızan <code>OperationalError</code> gibi metinleri arar: <em>error-based SQL injection</em>.</p>`,
+      en: `<p>Error messages cut both ways in security. If the app doesn't catch an exception internally and <strong>shows the traceback</strong> to the user, that's an information disclosure vulnerability (that is exactly OWASP Juice Shop's “Error Handling” challenge; in the project <code>JuiceShopClient.provoke_error()</code> records it as a finding). SecureShop instead catches exceptions and shows a friendly error page; <code>tests/security/test_error_handling_defenses.py</code> verifies there is no traceback on the page. SecureQA's SQLi check also looks for leaked texts like <code>OperationalError</code>: <em>error-based SQL injection</em>.</p>` },
     { t: "code", id: "c4",
       title: { tr: "Kaynak temizliği: finally ve with", en: "Cleaning up: finally and with" },
       code: String.raw`
@@ -131,8 +131,8 @@ finally:
     browser.close()        # hata olsa da olmasa da / with or without an error
 ` },
     { t: "project", file: "secureqa/findings.py",
-      tr: `<p><code>Finding</code> nesnesi oluşturulurken önem derecesi kontrol ediliyor; yanlış bir değer sessizce rapora girmek yerine <strong>hemen</strong> <code>ValueError</code> fırlatıyor (“fail fast”). <code>conftest.py</code>'deki DB sıfırlama ise tam tersini yapıyor: o uç nokta yoksa testi bozmamak için <code>requests.RequestException</code>'ı bilerek yutuyor.</p>`,
-      en: `<p>When a <code>Finding</code> is created its severity is validated; a wrong value raises <code>ValueError</code> <strong>immediately</strong> instead of silently entering the report (“fail fast”). The DB reset in <code>conftest.py</code> does the opposite: it deliberately swallows <code>requests.RequestException</code> so a missing endpoint doesn't break the test.</p>`,
+      tr: `<p><code>Finding</code> nesnesi oluşturulurken önem derecesi kontrol ediliyor; yanlış bir değer sessizce rapora girmek yerine <strong>hemen</strong> <code>ValueError</code> fırlatıyor (“fail fast”). <code>conftest.py</code>'deki DB sıfırlama ise tam tersini yapıyor: SecureShop'un <code>/__reset</code> ucu yalnızca <code>SHOP_TESTING=1</code> iken var; ulaşılamazsa testi bozmamak için <code>requests.RequestException</code>'ı bilerek yutuyor. Juice Shop testleri için ise erken <code>return</code> ile hiç denemiyor.</p>`,
+      en: `<p>When a <code>Finding</code> is created its severity is validated; a wrong value raises <code>ValueError</code> <strong>immediately</strong> instead of silently entering the report (“fail fast”). The DB reset in <code>conftest.py</code> does the opposite: SecureShop's <code>/__reset</code> endpoint only exists when <code>SHOP_TESTING=1</code>, so it deliberately swallows <code>requests.RequestException</code> to keep an unreachable endpoint from breaking the test. For Juice Shop tests it doesn't even try (early <code>return</code>).</p>`,
       code: String.raw`
 def __post_init__(self) -> None:
     """Validate the values right after the object is created."""
@@ -143,17 +143,23 @@ def __post_init__(self) -> None:
 
 # tests/conftest.py
 @pytest.fixture(scope="function", autouse=True)
-def _reset_db(base_url: str) -> None:
-    """Reset the demo app database before every test (best effort)."""
+def _reset_db(request: pytest.FixtureRequest) -> None:
+    """Reset the SecureShop database before each SecureShop test (best effort)."""
+    if "juice" in request.fixturenames or request.node.get_closest_marker("juiceshop"):
+        return
+    if "base_url" not in request.fixturenames:
+        return
+    url = request.getfixturevalue("base_url")
     try:
-        requests.post(base_url + "/__reset", timeout=5)
+        requests.post(url + "/__reset", timeout=5)
     except requests.RequestException:
         pass
 `,
       notes: [
         { line: 4, tr: "Geçersiz değer kontrolü — bu dersteki <code>normalize_severity</code> ile aynı fikir.", en: "Invalid value check — same idea as this lesson's <code>normalize_severity</code>." },
         { line: 5, tr: "<code>!r</code> değeri tırnaklarıyla gösterir: <code>Unknown severity 'urgent'</code>.", en: "<code>!r</code> shows the value with quotes: <code>Unknown severity 'urgent'</code>." },
-        { line: 14, tr: "Bilinçli olarak yutulan, <strong>dar</strong> bir hata tipi. Yorum (docstring) nedenini açıklıyor: “best effort”.", en: "A deliberately swallowed, <strong>narrow</strong> error type. The docstring explains why: “best effort”." }
+        { line: 12, tr: "Juice Shop testi mi? SecureShop'u sıfırlamaya gerek yok → erken <code>return</code>.", en: "A Juice Shop test? No need to reset SecureShop → early <code>return</code>." },
+        { line: 19, tr: "Bilinçli olarak yutulan, <strong>dar</strong> bir hata tipi. Yorum (docstring) nedenini açıklıyor: “best effort”.", en: "A deliberately swallowed, <strong>narrow</strong> error type. The docstring explains why: “best effort”." }
       ] }
   ],
   exercises: [

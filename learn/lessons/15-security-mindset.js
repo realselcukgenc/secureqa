@@ -24,8 +24,8 @@ SQ.addLesson({
   },
   blocks: [
     { t: "callout", kind: "sec", title: { tr: "Önce etik", en: "Ethics first" },
-      tr: `<p>Bu dersteki teknikleri yalnızca <strong>sahibi olduğun veya yazılı izin aldığın</strong> sistemlerde kullan: VulnShop yerel, kasıtlı olarak zafiyetli bir eğitim uygulamasıdır ve <code>127.0.0.1</code>'e bağlanır. Bu sayfadaki “veritabanı” da tamamen tarayıcında çalışan, ağa hiç çıkmayan küçük bir simülasyondur (<code>MiniDB</code>).</p>`,
-      en: `<p>Use the techniques in this lesson only on systems <strong>you own or have written permission to test</strong>: VulnShop is a local, intentionally vulnerable training app bound to <code>127.0.0.1</code>. The “database” on this page is a tiny simulation (<code>MiniDB</code>) running entirely in your browser, never touching the network.</p>` },
+      tr: `<p>Bu dersteki teknikleri yalnızca <strong>sahibi olduğun veya yazılı izin aldığın</strong> sistemlerde kullan. Projede saldırılan tek hedef <strong>OWASP Juice Shop</strong>'tur: kendi bilgisayarında (<code>127.0.0.1:3000</code>) çalıştırdığın, kasıtlı olarak zafiyetli, açık kaynak bir eğitim uygulaması. <strong>SecureShop</strong> (<code>demo_app/</code>) ise güvenli yazılmış demo mağazadır; ona karşı yalnızca savunmaların yerinde olduğunu doğrulayan kontroller çalışır. Bu sayfadaki “veritabanı” da tamamen tarayıcında çalışan, ağa hiç çıkmayan küçük bir simülasyondur (<code>MiniDB</code>).</p>`,
+      en: `<p>Use the techniques in this lesson only on systems <strong>you own or have written permission to test</strong>. The only target the project attacks is <strong>OWASP Juice Shop</strong>: an intentionally vulnerable, open-source training app you run on your own machine (<code>127.0.0.1:3000</code>). <strong>SecureShop</strong> (<code>demo_app/</code>) is the securely-built demo shop; against it only checks that verify the defenses are in place run. The “database” on this page is a tiny simulation (<code>MiniDB</code>) running entirely in your browser, never touching the network.</p>` },
     { t: "text",
       tr: `<p>Sertifikalarından bildiğin saldırgan bakışını test otomasyonuna taşımanın formülü basit: <strong>her girdi güvenilmezdir</strong>. Bir girdinin geldiği yer <em>kaynak</em> (form alanı, URL parametresi, header, çerez), vardığı tehlikeli yer <em>hedeftir</em> (SQL sorgusu, HTML sayfası, dosya yolu, kabuk komutu). Zafiyet, kaynaktan hedefe giden yolda <strong>veri ile kodun karışmasıdır</strong>. Bir güvenlik testi de üç soru sorar:</p>
 <ol><li><strong>Payload:</strong> Hangi girdi, veri/kod sınırını bozar? (<code>'</code>, <code>&lt;script&gt;</code>, <code>../</code>, başka bir id)</li><li><strong>Oracle:</strong> Bozulduğunu neyle kanıtlarım? (SQL hata metni, fazladan satır, script'in çalışması, başkasının verisi)</li><li><strong>Kayıt:</strong> Kanıtı nasıl raporlarım? (<code>Finding</code>: URL, kanıt, önem, OWASP, çözüm)</li></ol>`,
@@ -33,8 +33,8 @@ SQ.addLesson({
 <ol><li><strong>Payload:</strong> which input breaks the data/code boundary? (<code>'</code>, <code>&lt;script&gt;</code>, <code>../</code>, someone else's id)</li><li><strong>Oracle:</strong> how do I prove it broke? (SQL error text, extra rows, the script running, someone else's data)</li><li><strong>Record:</strong> how do I report the proof? (<code>Finding</code>: URL, evidence, severity, OWASP, remediation)</li></ol>` },
     { t: "h", tr: "1) SQL injection: string birleştirme", en: "1) SQL injection: string concatenation" },
     { t: "text",
-      tr: `<p>Aşağıdaki <code>login_vulnerable</code> fonksiyonu VulnShop'un zafiyetli giriş mantığını taklit ediyor: kullanıcı girdisini f-string ile doğrudan SQL metnine yapıştırıyor. <code>db</code>, <code>users</code> tablosu olan sahte bir veritabanı (<code>MiniDB</code>); gerçek bir SQL motoru gibi metni ayrıştırıyor, <code>--</code> yorumlarını yok sayıyor ve bozuk tırnakta hata veriyor. Hücreyi çalıştır ve her denemede <strong>üretilen SQL'e</strong> bak.</p>`,
-      en: `<p>The <code>login_vulnerable</code> function below imitates VulnShop's vulnerable login logic: it pastes user input straight into the SQL text with an f-string. <code>db</code> is a fake database (<code>MiniDB</code>) with a <code>users</code> table; like a real SQL engine it parses the text, ignores <code>--</code> comments and errors on a broken quote. Run the cell and look at <strong>the generated SQL</strong> for each attempt.</p>` },
+      tr: `<p>Aşağıdaki <code>login_vulnerable</code> fonksiyonu klasik bir zafiyetli giriş mantığını taklit ediyor (Juice Shop'un “Login Admin” challenge'ının istismar ettiği türden): kullanıcı girdisini f-string ile doğrudan SQL metnine yapıştırıyor. <code>db</code>, <code>users</code> tablosu olan sahte bir veritabanı (<code>MiniDB</code>); gerçek bir SQL motoru gibi metni ayrıştırıyor, <code>--</code> yorumlarını yok sayıyor ve bozuk tırnakta hata veriyor. Hücreyi çalıştır ve her denemede <strong>üretilen SQL'e</strong> bak.</p>`,
+      en: `<p>The <code>login_vulnerable</code> function below imitates a classic vulnerable login (the kind Juice Shop's “Login Admin” challenge exploits): it pastes user input straight into the SQL text with an f-string. <code>db</code> is a fake database (<code>MiniDB</code>) with a <code>users</code> table; like a real SQL engine it parses the text, ignores <code>--</code> comments and errors on a broken quote. Run the cell and look at <strong>the generated SQL</strong> for each attempt.</p>` },
     { t: "code", id: "c1", simulated: true, setup: SQ.shared.miniDb,
       title: { tr: "Zafiyetli giriş (f-string ile SQL)", en: "Vulnerable login (SQL with an f-string)" },
       code: String.raw`
@@ -99,12 +99,12 @@ for entry in db.log:
     print("  ", entry)
 ` },
     { t: "callout", kind: "qa",
-      tr: `<p>SecureQA bu testi tarayıcı açmadan, HTTP ile yapar (<code>tests/security/test_injection_sqli.py</code>): <code>'</code> gönderir ve yanıtta <code>looks_like_sql_error()</code> ile <code>OperationalError</code>, <code>unrecognized token</code> gibi izleri arar. Giriş formu için ise <code>SQLI_LOGIN_PAYLOADS</code> ile giriş yapılabiliyor mu diye bakar. Vulnerable modda kırmızı, secure modda (parametreli sorgular) yeşil.</p>`,
-      en: `<p>SecureQA runs this test without a browser, over HTTP (<code>tests/security/test_injection_sqli.py</code>): it sends <code>'</code> and searches the response with <code>looks_like_sql_error()</code> for traces like <code>OperationalError</code> or <code>unrecognized token</code>. For the login form it checks whether <code>SQLI_LOGIN_PAYLOADS</code> can log in. Red in vulnerable mode, green in secure mode (parameterized queries).</p>` },
+      tr: `<p>SecureQA bu testi tarayıcı açmadan, HTTP ile ve iki hedefe karşı yapar:</p><ul><li><strong>SecureShop</strong> (<code>tests/security/test_injection_defenses.py</code>): arama kutusuna ve giriş formuna <code>'</code> gönderir, yanıtta <code>looks_like_sql_error()</code> ile <code>OperationalError</code>, <code>unrecognized token</code> gibi izleri arar. SecureShop parametreli sorgu kullandığı için iz yoktur → savunma kontrolü yeşil.</li><li><strong>Juice Shop</strong> (<code>tests/juiceshop/test_challenges.py</code>): <code>/rest/user/login</code>'e e-posta olarak <code>' OR 1=1--</code> gönderir; token gelirse ve Juice Shop “Login Admin” challenge'ını çözüldü işaretlerse bu bir <code>Finding</code> olur (critical, CWE-89).</li></ul>`,
+      en: `<p>SecureQA runs this test without a browser, over HTTP, against two targets:</p><ul><li><strong>SecureShop</strong> (<code>tests/security/test_injection_defenses.py</code>): it sends <code>'</code> to the search box and the login form and searches the response with <code>looks_like_sql_error()</code> for traces like <code>OperationalError</code> or <code>unrecognized token</code>. SecureShop uses parameterized queries, so there are none → the defensive check is green.</li><li><strong>Juice Shop</strong> (<code>tests/juiceshop/test_challenges.py</code>): it sends <code>' OR 1=1--</code> as the email to <code>/rest/user/login</code>; if a token comes back and Juice Shop marks the “Login Admin” challenge solved, that becomes a <code>Finding</code> (critical, CWE-89).</li></ul>` },
     { t: "h", tr: "2) XSS: HTML'e kaçan girdi", en: "2) XSS: input escaping into HTML" },
     { t: "text",
-      tr: `<p>XSS'te hedef SQL değil, <strong>HTML</strong>dir. Arama terimi sayfaya kodlanmadan basılırsa, tarayıcı <code>&lt;script&gt;</code>'i metin değil <strong>kod</strong> olarak görür. Çözüm, çıktıyı bağlamına göre kodlamaktır: <code>html.escape()</code> <code>&lt;</code> → <code>&amp;lt;</code>, <code>&gt;</code> → <code>&amp;gt;</code>, <code>&amp;</code> → <code>&amp;amp;</code>, tırnaklar → <code>&amp;quot;</code> / <code>&amp;#x27;</code> yapar. (Jinja2 gibi şablon motorları bunu otomatik yapar; VulnShop'un vulnerable modu bunu bilerek kapatıyor.)</p>`,
-      en: `<p>In XSS the sink is not SQL but <strong>HTML</strong>. If the search term is printed into the page unencoded, the browser treats <code>&lt;script&gt;</code> as <strong>code</strong>, not text. The fix is encoding output for its context: <code>html.escape()</code> turns <code>&lt;</code> → <code>&amp;lt;</code>, <code>&gt;</code> → <code>&amp;gt;</code>, <code>&amp;</code> → <code>&amp;amp;</code>, quotes → <code>&amp;quot;</code> / <code>&amp;#x27;</code>. (Template engines like Jinja2 do this automatically; VulnShop's vulnerable mode switches it off on purpose.)</p>` },
+      tr: `<p>XSS'te hedef SQL değil, <strong>HTML</strong>dir. Arama terimi sayfaya kodlanmadan basılırsa, tarayıcı <code>&lt;script&gt;</code>'i metin değil <strong>kod</strong> olarak görür. Çözüm, çıktıyı bağlamına göre kodlamaktır: <code>html.escape()</code> <code>&lt;</code> → <code>&amp;lt;</code>, <code>&gt;</code> → <code>&amp;gt;</code>, <code>&amp;</code> → <code>&amp;amp;</code>, tırnaklar → <code>&amp;quot;</code> / <code>&amp;#x27;</code> yapar. (Jinja2 gibi şablon motorları bunu otomatik yapar; SecureShop buna ek olarak katı bir Content-Security-Policy gönderir, bkz. <code>demo_app/security.py</code>. Juice Shop'un “DOM XSS” challenge'ı ise ön yüz girdiyi DOM'a güvensiz yazınca ne olduğunu gösterir.)</p>`,
+      en: `<p>In XSS the sink is not SQL but <strong>HTML</strong>. If the search term is printed into the page unencoded, the browser treats <code>&lt;script&gt;</code> as <strong>code</strong>, not text. The fix is encoding output for its context: <code>html.escape()</code> turns <code>&lt;</code> → <code>&amp;lt;</code>, <code>&gt;</code> → <code>&amp;gt;</code>, <code>&amp;</code> → <code>&amp;amp;</code>, quotes → <code>&amp;quot;</code> / <code>&amp;#x27;</code>. (Template engines like Jinja2 do this automatically; on top of that SecureShop sends a strict Content-Security-Policy, see <code>demo_app/security.py</code>. Juice Shop's “DOM XSS” challenge shows what happens when the front-end writes input into the DOM unsafely.)</p>` },
     { t: "code", id: "c3",
       title: { tr: "Yansıyan XSS ve tespiti", en: "Reflected XSS and its detection" },
       code: String.raw`
@@ -205,36 +205,37 @@ page_html = f'<span id="search-term">{payload}</span>'          # vulnerable yan
 finding = check_reflected_xss("http://127.0.0.1:5000/products?q=...", page_html, payload)
 print(json.dumps(asdict(finding), indent=2) if finding else "temiz / clean")
 ` },
-    { t: "project", file: "secureqa/security/sqli.py + payloads.py",
-      tr: `<p>SecureQA'nın SQLi kontrolü bu dersin “oracle” fikrinin birebir uygulaması: tek tırnak gönder, yanıtta veritabanı hata imzası ara, bulursa kanıt olarak hatanın etrafındaki metni döndür. Payload'lar tek bir dosyada, açıklamalarıyla birlikte duruyor.</p>`,
-      en: `<p>SecureQA's SQLi check is a direct implementation of this lesson's “oracle” idea: send a single quote, search the response for a database error signature, and if found return the text around the error as evidence. Payloads live in one file, with explanations.</p>`,
+    { t: "project", file: "secureqa/security/payloads.py + sqli.py + juiceshop.py",
+      tr: `<p>Bu dersin “payload → oracle → kayıt” fikri projede iki yönde kullanılıyor. SecureShop'a karşı <code>looks_like_sql_error()</code> bir <strong>savunma</strong> oracle'ı: tek tırnak gönderilir, hata izi <em>yoksa</em> kontrol geçer. Juice Shop'a karşı <code>login_sqli()</code> bir <strong>saldırı</strong>: <code>' OR 1=1--</code> ile parola kontrolü yorum satırına çevrilir; token gelirse ve challenge çözüldüyse bulgu kaydedilir.</p>`,
+      en: `<p>This lesson's “payload → oracle → record” idea is used in two directions in the project. Against SecureShop, <code>looks_like_sql_error()</code> is a <strong>defensive</strong> oracle: a single quote is sent and the check passes when there is <em>no</em> error trace. Against Juice Shop, <code>login_sqli()</code> is an <strong>attack</strong>: <code>' OR 1=1--</code> comments out the password check; if a token comes back and the challenge is solved, a finding is recorded.</p>`,
       code: String.raw`
 # payloads.py
 SQLI_PROBE = "'"
 SQLI_TRUE = "' OR '1'='1"
 SQLI_COMMENT = "' OR '1'='1' --"
-SQLI_LOGIN_PAYLOADS: list[str] = ["admin' --", "admin' OR '1'='1' --", "admin'/*"]
 
-# sqli.py
-SQL_ERROR_SIGNS: tuple[str, ...] = (
-    "sqlite3", "sql syntax", "syntax error", "unrecognized token",
-    "near \"", "OperationalError", "no such column", "incomplete input",
-)
+# sqli.py (SecureShop savunma kontrolü / defensive check)
+def looks_like_sql_error(text: str) -> bool:
+    """True when the text contains a tell-tale database error message."""
+    lowered = text.lower()
+    return any(sign.lower() in lowered for sign in SQL_ERROR_SIGNS)
 
 
-def probe_error_based(session: requests.Session, url: str) -> tuple[bool, str]:
-    """Send the URL (already containing a ') and report whether a SQL error leaked."""
-    response = session.get(url, timeout=5)
-    body = response.text
-    if looks_like_sql_error(body):
-        return True, _snippet_around_error(body)
-    return False, f"HTTP {response.status_code}, no SQL error text in response."
+# juiceshop.py (Juice Shop saldırısı / attack)
+def login_sqli(self, email_payload: str = "' OR 1=1--") -> tuple[bool, str]:
+    """SQL-injection login bypass via POST /rest/user/login."""
+    response = self.session.post(
+        self.base_url + "/rest/user/login",
+        json={"email": email_payload, "password": "whatever"},
+        timeout=10,
+    )
+    ok = response.status_code == 200 and "authentication" in response.text
 `,
       notes: [
         { line: 2, tr: "Probe: veri/kod sınırını bozan en küçük girdi.", en: "Probe: the smallest input that breaks the data/code boundary." },
-        { line: 5, tr: "Giriş atlatma payload'ları — bu dersin ilk hücresinde canlı gördün.", en: "Login-bypass payloads — you saw them live in this lesson's first cell." },
-        { line: 9, tr: "Oracle: MiniDB'nin verdiği <code>unrecognized token</code> hatası da bu listede!", en: "Oracle: MiniDB's <code>unrecognized token</code> error is in this list too!" },
-        { line: 19, tr: "Kanıt (evidence) <code>Finding</code>'e girer; raporda okuyan kişi neden kırmızı olduğunu görür.", en: "The evidence goes into the <code>Finding</code>; the report reader sees why it's red." }
+        { line: 10, tr: "Oracle: <code>SQL_ERROR_SIGNS</code> listesinde MiniDB'nin verdiği <code>unrecognized token</code> hatası da var!", en: "Oracle: <code>SQL_ERROR_SIGNS</code> includes the <code>unrecognized token</code> error MiniDB gave you!" },
+        { line: 14, tr: "Juice Shop payload'ı: bu dersin ilk hücresindeki <code>' OR '1'='1' --</code> ile aynı fikir — <code>--</code> geri kalan SQL'i yorum yapar.", en: "Juice Shop's payload: the same idea as <code>' OR '1'='1' --</code> in this lesson's first cell — <code>--</code> comments out the rest of the SQL." },
+        { line: 21, tr: "Saldırının oracle'ı: yanıtta bir oturum token'ı varsa giriş atlatıldı. Test ardından <code>/api/Challenges</code> ile doğrular ve <code>Finding</code> kaydeder.", en: "The attack's oracle: a session token in the response means the login was bypassed. The test then confirms via <code>/api/Challenges</code> and records a <code>Finding</code>." }
       ] }
   ],
   exercises: [
@@ -338,8 +339,8 @@ ORDERS = {
 }
 `,
       prompt: {
-        tr: `<p><code>get_order_safe(current_user_id, order_id)</code> yaz ve <code>(status, body)</code> tuple'ı döndür:</p><ul><li>Oturum yoksa (<code>current_user_id is None</code>) → <code>(401, {"error": "login required"})</code></li><li>Sipariş yoksa → <code>(404, {"error": "not found"})</code></li><li>Sipariş başka kullanıcınınsa → <code>(403, {"error": "forbidden"})</code></li><li>Aksi halde → <code>(200, sipariş)</code></li></ul><p>İpucu: güvenli bir API'de 403 yerine 404 döndürmek de yaygındır (siparişin varlığını bile sızdırmamak için) — burada 403 kullan.</p>`,
-        en: `<p>Write <code>get_order_safe(current_user_id, order_id)</code> returning a <code>(status, body)</code> tuple:</p><ul><li>no session (<code>current_user_id is None</code>) → <code>(401, {"error": "login required"})</code></li><li>order missing → <code>(404, {"error": "not found"})</code></li><li>order belongs to another user → <code>(403, {"error": "forbidden"})</code></li><li>otherwise → <code>(200, order)</code></li></ul><p>Tip: secure APIs often answer 404 instead of 403 (so the order's existence doesn't leak either) — use 403 here.</p>`
+        tr: `<p><code>get_order_safe(current_user_id, order_id)</code> yaz ve <code>(status, body)</code> tuple'ı döndür:</p><ul><li>Oturum yoksa (<code>current_user_id is None</code>) → <code>(401, {"error": "login required"})</code></li><li>Sipariş yoksa → <code>(404, {"error": "not found"})</code></li><li>Sipariş başka kullanıcınınsa → <code>(403, {"error": "forbidden"})</code></li><li>Aksi halde → <code>(200, sipariş)</code></li></ul><p>İpucu: güvenli bir API'de 403 yerine 404 döndürmek de yaygındır (siparişin varlığını bile sızdırmamak için) — SecureShop'un <code>/orders/&lt;id&gt;</code> ucu tam olarak bunu yapar (<code>demo_app/routes/account.py</code>). Burada ayrımı görebilmek için 403 kullan.</p>`,
+        en: `<p>Write <code>get_order_safe(current_user_id, order_id)</code> returning a <code>(status, body)</code> tuple:</p><ul><li>no session (<code>current_user_id is None</code>) → <code>(401, {"error": "login required"})</code></li><li>order missing → <code>(404, {"error": "not found"})</code></li><li>order belongs to another user → <code>(403, {"error": "forbidden"})</code></li><li>otherwise → <code>(200, order)</code></li></ul><p>Tip: secure APIs often answer 404 instead of 403 (so the order's existence doesn't leak either) — SecureShop's <code>/orders/&lt;id&gt;</code> endpoint does exactly that (<code>demo_app/routes/account.py</code>). Use 403 here so the difference is visible.</p>`
       },
       starter: String.raw`
 def get_order_safe(current_user_id, order_id):

@@ -122,26 +122,26 @@ from dataclasses import FrozenInstanceError, dataclass, replace
 
 
 @dataclass(frozen=True)
-class VulnInfo:
-    id: str
+class ChallengeInfo:
+    key: str
     severity: str
     owasp: str
 
 
-SQLI = VulnInfo("SQLI-LOGIN", "critical", "A03:2021-Injection")
+LOGIN_ADMIN = ChallengeInfo("loginAdminChallenge", "critical", "A03:2021-Injection")
 try:
-    SQLI.severity = "low"                    # değişmez! / immutable!
+    LOGIN_ADMIN.severity = "low"             # değişmez! / immutable!
 except FrozenInstanceError as e:
     print("Değiştirilemez:", e)
 
-relaxed = replace(SQLI, severity="high")     # değiştirilmiş KOPYA / a modified COPY
-print(SQLI)
+relaxed = replace(LOGIN_ADMIN, severity="high")   # değiştirilmiş KOPYA / a modified COPY
+print(LOGIN_ADMIN)
 print(relaxed)
-print(hash(SQLI) != hash(relaxed), {SQLI, relaxed})   # frozen -> set/dict anahtarı olabilir
+print(hash(LOGIN_ADMIN) != hash(relaxed), {LOGIN_ADMIN, relaxed})   # frozen -> set/dict anahtarı olabilir
 ` },
-    { t: "project", file: "secureqa/findings.py + catalog.py",
-      tr: `<p>SecureQA'nın kalbi bu iki dataclass. <code>VulnInfo</code> (frozen) her zafiyet türünün değişmez şablonu: başlık, önem, OWASP, CWE, çözüm metni bir kez yazılır. Test bir açık bulduğunda <code>catalog.XSS_REFLECTED.finding(url=..., evidence=...)</code> çağırır ve somut bir <code>Finding</code> üretir. Rapor üreteci de <code>asdict</code> ile her bulguyu JSON'a çevirir.</p>`,
-      en: `<p>These two dataclasses are SecureQA's heart. <code>VulnInfo</code> (frozen) is the immutable template of each vulnerability type: title, severity, OWASP, CWE and remediation are written once. When a test finds an issue it calls <code>catalog.XSS_REFLECTED.finding(url=..., evidence=...)</code> to create a concrete <code>Finding</code>. The report generator turns each finding into JSON with <code>asdict</code>.</p>`,
+    { t: "project", file: "secureqa/findings.py + juiceshop.py",
+      tr: `<p>SecureQA'nın kalbi bu iki dataclass. <code>Finding</code> doğrulanmış tek bir güvenlik açığıdır. <code>ChallengeInfo</code> (frozen) ise her Juice Shop challenge'ının değişmez şablonu: başlık, önem, OWASP, CWE, çözüm metni bir kez yazılır. Juice Shop testi challenge'ın çözüldüğünü doğruladığında <code>CHALLENGES[key].finding(base_url, evidence)</code> çağırır ve somut bir <code>Finding</code> üretir. SecureShop tarafında aynı rolü <code>secureqa/checks.py</code> içindeki <code>Check</code> dataclass'ı (<code>passed: bool</code> alanıyla) oynar. Rapor üreteci ikisini de <code>asdict</code> ile JSON'a çevirir.</p>`,
+      en: `<p>These two dataclasses are SecureQA's heart. A <code>Finding</code> is one confirmed security problem. <code>ChallengeInfo</code> (frozen) is the immutable template of each Juice Shop challenge: title, severity, OWASP, CWE and remediation are written once. When a Juice Shop test confirms the challenge is solved it calls <code>CHALLENGES[key].finding(base_url, evidence)</code> to create a concrete <code>Finding</code>. On the SecureShop side the <code>Check</code> dataclass in <code>secureqa/checks.py</code> (with a <code>passed: bool</code> field) plays the same role. The report generator turns both into JSON with <code>asdict</code>.</p>`,
       code: String.raw`
 @dataclass
 class Finding:
@@ -169,7 +169,7 @@ class Finding:
 
     @property
     def owasp_code(self) -> str:
-        """Only the code part: "A03:2021-Injection" -> "A03:2021"."""
+        """Only the code part of the OWASP category: "A03:2021-Injection" -> "A03:2021"."""
         return self.owasp.split("-")[0]
 
     def to_dict(self) -> dict[str, Any]:
@@ -179,6 +179,25 @@ class Finding:
     def from_dict(cls, data: dict[str, Any]) -> "Finding":
         known = {name for name in cls.__dataclass_fields__}
         return cls(**{key: value for key, value in data.items() if key in known})
+
+
+# secureqa/juiceshop.py
+@dataclass(frozen=True)
+class ChallengeInfo:
+    """How one Juice Shop challenge maps to an OWASP/CWE finding (TR: challenge -> bulgu)."""
+
+    key: str                 # stable Juice Shop challenge key, e.g. "loginAdminChallenge"
+    name: str                # human name shown on the score board
+    # ... title_tr, title_en, severity, owasp, cwe, remediation_tr, remediation_en
+
+    def finding(self, base_url: str, evidence: str, test_id: str = "") -> Finding:
+        """Build a Finding for this solved challenge."""
+        return Finding(
+            id=f"JS-{self.key}",
+            # ... title_tr=self.title_tr, severity=self.severity, owasp=self.owasp, ...
+            url=f"{base_url}/#/score-board",
+            evidence=evidence,
+        )
 `,
       notes: [
         { line: 5, tr: "Zorunlu alanlar önce: spec'teki sözleşme (id, başlıklar, severity, owasp, cwe, url, evidence, çözümler).", en: "Required fields first: the spec's contract (id, titles, severity, owasp, cwe, url, evidence, remediations)." },
@@ -186,7 +205,9 @@ class Finding:
         { line: 18, tr: "Zaman damgası her nesne için o an üretilir (<code>default_factory</code>).", en: "The timestamp is produced at creation time for each object (<code>default_factory</code>)." },
         { line: 22, tr: "Doğrulama: yanlış önem derecesi rapora hiç giremez.", en: "Validation: a wrong severity never reaches the report." },
         { line: 25, tr: "Türetilmiş alan: rapordaki OWASP filtresi bunu kullanır.", en: "Derived field: the report's OWASP filter uses this." },
-        { line: 33, tr: "<code>@classmethod</code>: sözlükten (findings.json) nesneyi geri kurar; bilinmeyen anahtarları atlar. <code>**</code> sözlüğü keyword argümanlara açar.", en: "<code>@classmethod</code>: rebuilds the object from a dict (findings.json), skipping unknown keys. <code>**</code> unpacks the dict into keyword arguments." }
+        { line: 33, tr: "<code>@classmethod</code>: sözlükten (findings.json) nesneyi geri kurar; bilinmeyen anahtarları atlar. <code>**</code> sözlüğü keyword argümanlara açar.", en: "<code>@classmethod</code>: rebuilds the object from a dict (findings.json), skipping unknown keys. <code>**</code> unpacks the dict into keyword arguments." },
+        { line: 40, tr: "<code>frozen=True</code>: challenge şablonları test sırasında yanlışlıkla değiştirilemez.", en: "<code>frozen=True</code>: challenge templates can't be changed by accident during a test run." },
+        { line: 48, tr: "Şablondan somut bulguya: sabit bilgiler şablondan, URL ve kanıt testten gelir.", en: "From template to concrete finding: the fixed info comes from the template, the URL and evidence from the test." }
       ] }
   ],
   exercises: [
@@ -322,6 +343,6 @@ assert _j[0] == {"id": "SQLI", "severity": "critical", "owasp": "A03:2021"}, _t(
       answer: 0, explain: { tr: "<code>= []</code> yazmak <code>ValueError: mutable default</code> verir; her nesneye yeni liste için factory gerekir.", en: "<code>= []</code> raises <code>ValueError: mutable default</code>; a factory makes a fresh list per object." } },
     { q: { tr: "<code>frozen=True</code> bir dataclass'a ne kazandırır?", en: "What does <code>frozen=True</code> give a dataclass?" },
       options: [{ tr: "Daha hızlı JSON çevirisi", en: "Faster JSON conversion" }, { tr: "Değişmezlik (ve hash'lenebilirlik): şablonlar yanlışlıkla değiştirilemez", en: "Immutability (and hashability): templates can't be changed by accident" }, { tr: "Otomatik veritabanı kaydı", en: "Automatic database storage" }],
-      answer: 1, explain: { tr: "SecureQA'nın <code>VulnInfo</code> şablonları bu yüzden frozen.", en: "That's why SecureQA's <code>VulnInfo</code> templates are frozen." } }
+      answer: 1, explain: { tr: "SecureQA'nın <code>ChallengeInfo</code> şablonları (Juice Shop) bu yüzden frozen.", en: "That's why SecureQA's <code>ChallengeInfo</code> templates (Juice Shop) are frozen." } }
   ]
 });

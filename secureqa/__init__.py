@@ -1,11 +1,11 @@
-"""SecureQA — a small security test-automation framework around a vulnerable demo app.
+"""SecureQA — a small security test-automation framework (SecureShop + OWASP Juice Shop targets).
 
 Public pieces you will use most often::
 
     from secureqa.config import settings
     from secureqa.findings import Finding, FindingsCollector
-    from secureqa import catalog           # ready-made vulnerability templates
-    from secureqa.server import DemoServer  # start/stop the demo app
+    from secureqa.juiceshop import JuiceShopClient  # Juice Shop challenge client
+    from secureqa.server import DemoServer  # start/stop SecureShop
 
 See ``SPEC.md`` for the full project description (Turkish + English).
 """

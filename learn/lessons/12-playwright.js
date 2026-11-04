@@ -24,8 +24,8 @@ SQ.addLesson({
   },
   blocks: [
     { t: "callout", kind: "info", title: { tr: "Simülasyon hakkında", en: "About the simulation" },
-      tr: `<p>Gerçek Playwright bir tarayıcı süreci başlattığı için bu sayfanın içinde çalışamaz. Bu dersteki düzenlenebilir hücreler, <code>playwright.sync_api</code> modülünü taklit eden küçük bir <strong>FakePage / mini VulnShop</strong> kullanır: API isimleri gerçeğiyle aynıdır. Gerçek kod örnekleri “Gerçek kod” etiketiyle salt okunur gösterilir — onları kendi bilgisayarında çalıştırabilirsin.</p>`,
-      en: `<p>Real Playwright launches a browser process, so it can't run inside this page. The editable cells in this lesson use a small <strong>FakePage / mini VulnShop</strong> that imitates the <code>playwright.sync_api</code> module: API names match the real thing. Real code examples are shown read-only with a “Real code” label — run them on your own machine.</p>` },
+      tr: `<p>Gerçek Playwright bir tarayıcı süreci başlattığı için bu sayfanın içinde çalışamaz. Bu dersteki düzenlenebilir hücreler, <code>playwright.sync_api</code> modülünü taklit eden küçük bir <strong>FakePage</strong> ve onun arkasındaki <strong>MiniShop (simülasyon)</strong> adlı sahte mağazayı kullanır: API isimleri gerçeğiyle aynıdır. MiniShop varsayılan olarak bilerek zafiyetlidir, <code>FakePage(secure=True)</code> ise savunmaları açar. Gerçek projede aynı Playwright kodu iki hedefe karşı çalışır: savunma kontrolleri <strong>SecureShop</strong>'a (<code>demo_app/</code>), güvenlik bulguları ise <strong>OWASP Juice Shop</strong>'a (<code>tests/juiceshop/</code>). Gerçek kod örnekleri “Gerçek kod” etiketiyle salt okunur gösterilir — onları kendi bilgisayarında çalıştırabilirsin.</p>`,
+      en: `<p>Real Playwright launches a browser process, so it can't run inside this page. The editable cells in this lesson use a small <strong>FakePage</strong> backed by a fake shop called <strong>MiniShop (simulation)</strong> that imitates the <code>playwright.sync_api</code> module: API names match the real thing. MiniShop is deliberately vulnerable by default, and <code>FakePage(secure=True)</code> turns the defenses on. In the real project the same Playwright code runs against two targets: defensive checks against <strong>SecureShop</strong> (<code>demo_app/</code>) and security findings against <strong>OWASP Juice Shop</strong> (<code>tests/juiceshop/</code>). Real code examples are shown read-only with a “Real code” label — run them on your own machine.</p>` },
     { t: "code", id: "c0", readonly: true, real: true, file: "examples/first_playwright.py",
       title: { tr: "Gerçek Playwright: en küçük script", en: "Real Playwright: the smallest script" },
       code: String.raw`
@@ -76,13 +76,13 @@ with sync_playwright() as p:
     { t: "h", tr: "Locator stratejileri", en: "Locator strategies" },
     { t: "text",
       tr: `<table><thead><tr><th>Yöntem</th><th>Örnek</th><th>Not</th></tr></thead><tbody>
-<tr><td>CSS / id</td><td><code>page.locator("#login-btn")</code></td><td>VulnShop'un sabit id'leri (spec sözleşmesi)</td></tr>
+<tr><td>CSS / id</td><td><code>page.locator("#login-btn")</code></td><td>SecureShop'un sabit id'leri (SPEC sözleşmesi)</td></tr>
 <tr><td>test id</td><td><code>page.get_by_test_id("product-card")</code></td><td><code>data-testid</code> — en dayanıklısı</td></tr>
 <tr><td>rol</td><td><code>page.get_by_role("button", name="Giriş yap")</code></td><td>Erişilebilirlik ağacına göre, kullanıcı gibi</td></tr>
 <tr><td>metin</td><td><code>page.get_by_text("Sonuçlar")</code></td><td>Çok dilli sitelerde dikkat: TR/EN değişir!</td></tr>
 </tbody></table>`,
       en: `<table><thead><tr><th>Method</th><th>Example</th><th>Note</th></tr></thead><tbody>
-<tr><td>CSS / id</td><td><code>page.locator("#login-btn")</code></td><td>VulnShop's stable ids (spec contract)</td></tr>
+<tr><td>CSS / id</td><td><code>page.locator("#login-btn")</code></td><td>SecureShop's stable ids (SPEC contract)</td></tr>
 <tr><td>test id</td><td><code>page.get_by_test_id("product-card")</code></td><td><code>data-testid</code> — the most robust</td></tr>
 <tr><td>role</td><td><code>page.get_by_role("button", name="Giriş yap")</code></td><td>By accessibility tree, like a user</td></tr>
 <tr><td>text</td><td><code>page.get_by_text("Sonuçlar")</code></td><td>Careful on multilingual sites: TR/EN changes!</td></tr>
@@ -110,8 +110,8 @@ for user in ["olmayan_kullanici", "selcuk"]:
     print(f"{user:>18} -> {page.locator('#login-error').inner_text()}")
 ` },
     { t: "callout", kind: "sec",
-      tr: `<p>Son döngü bir güvenlik testidir: “kullanıcı bulunamadı” ile “parola hatalı” mesajları farklıysa, saldırgan hangi kullanıcı adlarının <strong>var olduğunu</strong> öğrenebilir (user enumeration, OWASP A07). Güvenli uygulama her iki durumda da aynı genel mesajı verir.</p>`,
-      en: `<p>The last loop is a security test: if “user not found” and “wrong password” differ, an attacker learns which usernames <strong>exist</strong> (user enumeration, OWASP A07). A secure app shows the same generic message in both cases.</p>` },
+      tr: `<p>Son döngü bir güvenlik testidir: “kullanıcı bulunamadı” ile “parola hatalı” mesajları farklıysa, saldırgan hangi kullanıcı adlarının <strong>var olduğunu</strong> öğrenebilir (user enumeration, OWASP A07). Güvenli uygulama her iki durumda da aynı genel mesajı verir: SecureShop böyle yapar ve <code>tests/security/test_authentication_defenses.py</code> içindeki <code>test_login_error_is_generic</code> bunu her koşuda doğrular. (Simülasyondaki MiniShop varsayılan olarak farklı mesaj verir — zafiyeti görebilmen için.)</p>`,
+      en: `<p>The last loop is a security test: if “user not found” and “wrong password” differ, an attacker learns which usernames <strong>exist</strong> (user enumeration, OWASP A07). A secure app shows the same generic message in both cases: SecureShop does, and <code>test_login_error_is_generic</code> in <code>tests/security/test_authentication_defenses.py</code> verifies it on every run. (The simulated MiniShop shows different messages by default — so you can see the vulnerability.)</p>` },
     { t: "h", tr: "XSS'i tarayıcıda kanıtlamak", en: "Proving XSS in the browser" },
     { t: "text",
       tr: `<p>HTML'de payload'ı görmek bir <em>belirti</em>dir; asıl <strong>kanıt</strong>, script'in tarayıcıda gerçekten çalışmasıdır. İki yol var: (1) <code>alert()</code> açılırsa <code>page.on("dialog", ...)</code> olayı tetiklenir; (2) SecureQA'nın yöntemi: sayfa yüklenmeden <code>add_init_script</code> ile <code>window.sqaMark</code> fonksiyonunu tanımla, payload'lar bu fonksiyonu çağırsın, sonra <code>page.evaluate("window.__sqa_fired")</code> ile oku.</p>`,
@@ -132,9 +132,9 @@ for secure in (False, True):
     raw_in_html = payload in page.content()
     print(f"{mode:>10}: dialog={fired}  raw_in_html={raw_in_html}")
 ` },
-    { t: "project", file: "secureqa/security/xss.py + tests/security/test_injection_xss.py",
-      tr: `<p>Gerçek SecureQA kodu: kanıt mekanizması <code>xss.py</code>'de, onu kullanan test ise POM (<code>ProductsPage</code>) ile yazılmış. Test iki sinyale bakıyor: script çalıştı mı (güçlü kanıt) <strong>veya</strong> payload kodlanmadan HTML'e mi yansıdı.</p>`,
-      en: `<p>Real SecureQA code: the proof mechanism lives in <code>xss.py</code>, and the test using it is written with the POM (<code>ProductsPage</code>). The test looks at two signals: did the script run (strong proof) <strong>or</strong> was the payload reflected into the HTML unencoded.</p>`,
+    { t: "project", file: "secureqa/security/xss.py + tests/security/test_injection_defenses.py",
+      tr: `<p>Gerçek SecureQA kodu: kanıt mekanizması <code>xss.py</code>'de, onu kullanan SecureShop savunma kontrolü ise POM (<code>ProductsPage</code>) ile yazılmış. Test iki sinyale bakıyor: script çalıştı mı (güçlü kanıt) ve payload kodlanmadan HTML'e yansıdı mı. İkisi de temizse savunma yerindedir. Juice Shop tarafında <code>tests/juiceshop/test_browser_challenges.py</code> aynı fikri tersinden kullanır: DOM XSS payload'ı çalışır ve challenge “solved” olursa bir bulgu kaydedilir.</p>`,
+      en: `<p>Real SecureQA code: the proof mechanism lives in <code>xss.py</code>, and the SecureShop defensive check using it is written with the POM (<code>ProductsPage</code>). The test looks at two signals: did the script run (strong proof), and was the payload reflected into the HTML unencoded. If both are clean, the defense is in place. On the Juice Shop side, <code>tests/juiceshop/test_browser_challenges.py</code> uses the same idea the other way round: when the DOM XSS payload runs and the challenge is “solved”, a finding is recorded.</p>`,
       code: String.raw`
 def install_xss_probe(page: Page) -> None:
     """Expose a JS function sqaMark(id) that records when a payload executes."""
@@ -150,26 +150,33 @@ def payload_executed(page: Page) -> bool:
     return fired == XSS_MARKER
 
 
-def test_reflected_xss_in_search(page, base_url, record_finding) -> None:
+def test_reflected_xss_is_blocked(page, base_url, record_check) -> None:
+    """The search term must be encoded; the injected script must NOT run."""
     products = ProductsPage(page, base_url)
-    payload = XSS_PAYLOADS[0]          # "<script>sqaMark('sqa7x9')</script>"
+    payload = XSS_PAYLOADS[0]
     products.search(payload)
-
     executed = xss.payload_executed(page)
-    reflected = xss.reflects_unescaped(products.content(), payload)
-    vulnerable = executed or reflected
-
-    if vulnerable:
-        how = "script executed in browser" if executed else "payload reflected unescaped in HTML"
-        record_finding(catalog.XSS_REFLECTED.finding(url=page.url, evidence=f"{how}: {payload}"))
-    assert not vulnerable, "Reflected XSS: the search term is not safely encoded."
+    reflected_raw = xss.reflects_unescaped(products.content(), payload)
+    safe = not executed and not reflected_raw
+    record_check(
+        Check(
+            id="XSS-REFLECTED",
+            title_tr="Yansıtılmış XSS engelleniyor (arama)",
+            title_en="Reflected XSS blocked (search)",
+            category="Output Encoding",
+            passed=safe,
+            detail="payload encoded, script did not execute" if safe else "payload executed or reflected raw",
+        )
+    )
+    assert safe, "Reflected XSS: the search term was not safely encoded."
 `,
       notes: [
         { line: 3, tr: "<code>add_init_script</code>: her sayfa yüklemesinden <strong>önce</strong> çalışan JS. <code>page</code> fixture'ı bunu her teste kurar.", en: "<code>add_init_script</code>: JS that runs <strong>before</strong> every page load. The <code>page</code> fixture installs it for every test." },
         { line: 11, tr: "<code>evaluate</code>: tarayıcıda JS çalıştırıp sonucu Python'a getirir.", en: "<code>evaluate</code>: runs JS in the browser and brings the result back to Python." },
-        { line: 18, tr: "POM: arama URL'sini (ve <code>quote</code>'u) test değil, page object biliyor.", en: "POM: the page object, not the test, knows the search URL (and the <code>quote</code>)." },
-        { line: 22, tr: "İki sinyalden biri yeterli: çalıştı <em>veya</em> ham yansıdı.", en: "Either signal is enough: it ran <em>or</em> it reflected raw." },
-        { line: 26, tr: "Önce bulgu kaydı (rapor için), sonra kırmızı assert (pytest için).", en: "First record the finding (for the report), then the red assert (for pytest)." }
+        { line: 19, tr: "POM: arama URL'sini (ve <code>quote</code>'u) test değil, page object biliyor.", en: "POM: the page object, not the test, knows the search URL (and the <code>quote</code>)." },
+        { line: 22, tr: "Güvenli sayılmak için <em>iki</em> sinyal de temiz olmalı: çalışmadı <em>ve</em> ham yansımadı.", en: "To count as safe, <em>both</em> signals must be clean: it didn't run <em>and</em> it didn't reflect raw." },
+        { line: 29, tr: "Sonuç önce bir <code>Check</code> olarak kaydediliyor (rapor için)…", en: "The result is first recorded as a <code>Check</code> (for the report)…" },
+        { line: 33, tr: "…sonra assert (pytest için). SecureShop çıktıyı kodladığı için normalde yeşil.", en: "…then the assert (for pytest). SecureShop encodes output, so it's normally green." }
       ] }
   ],
   exercises: [
@@ -229,8 +236,8 @@ def login(page, base_url, username, password):
     return page.locator("a[href='/logout']").count() > 0
 `,
       prompt: {
-        tr: `<p>Hazır bir <code>login()</code> var. <code>is_sqli_bypass_possible(page, base_url, payloads)</code> fonksiyonunu yaz: listedeki her kullanıcı adı payload'ı ve parola olarak <code>"x"</code> ile giriş dene; <strong>herhangi biri</strong> giriş yaptırırsa <code>True</code> döndür. Sonra şunu kontrol et: <code>FakePage()</code> (vulnerable) için <code>True</code>, <code>FakePage(secure=True)</code> için <code>False</code> olmalı.</p>`,
-        en: `<p>A <code>login()</code> helper is ready. Write <code>is_sqli_bypass_possible(page, base_url, payloads)</code>: try logging in with each username payload and the password <code>"x"</code>; return <code>True</code> if <strong>any</strong> of them logs in. Then verify: <code>True</code> for <code>FakePage()</code> (vulnerable) and <code>False</code> for <code>FakePage(secure=True)</code>.</p>`
+        tr: `<p>Hazır bir <code>login()</code> var. <code>is_sqli_bypass_possible(page, base_url, payloads)</code> fonksiyonunu yaz: listedeki her kullanıcı adı payload'ı ve parola olarak <code>"x"</code> ile giriş dene; <strong>herhangi biri</strong> giriş yaptırırsa <code>True</code> döndür. Sonra şunu kontrol et: <code>FakePage()</code> (zafiyetli MiniShop) için <code>True</code>, <code>FakePage(secure=True)</code> (savunmalı, SecureShop gibi) için <code>False</code> olmalı. Gerçek projede bu saldırının karşılığı Juice Shop'un “Login Admin” challenge'ıdır (<code>tests/juiceshop/test_challenges.py</code>).</p>`,
+        en: `<p>A <code>login()</code> helper is ready. Write <code>is_sqli_bypass_possible(page, base_url, payloads)</code>: try logging in with each username payload and the password <code>"x"</code>; return <code>True</code> if <strong>any</strong> of them logs in. Then verify: <code>True</code> for <code>FakePage()</code> (vulnerable MiniShop) and <code>False</code> for <code>FakePage(secure=True)</code> (defended, like SecureShop). In the real project this attack corresponds to Juice Shop's “Login Admin” challenge (<code>tests/juiceshop/test_challenges.py</code>).</p>`
       },
       starter: String.raw`
 SQLI_LOGIN_PAYLOADS = ["admin' --", "admin' OR '1'='1' --", "admin'/*"]

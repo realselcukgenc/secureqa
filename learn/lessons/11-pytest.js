@@ -67,7 +67,7 @@ pytest -m "not security"            # güvenlik testleri hariç / all but securi
 pytest -k sqli                      # adında "sqli" geçenler / name contains "sqli"
 pytest -x                           # ilk hatada dur / stop at first failure
 pytest --lf                         # sadece son kalanları tekrar çalıştır / rerun last failed
-pytest --mode secure                # SecureQA'nın kendi seçeneği (conftest.py)
+pytest -m juiceshop --no-server    # Juice Shop saldırıları; --no-server SecureQA seçeneği (conftest.py)
 ` },
     { t: "h", tr: "parametrize: aynı test, farklı veriler", en: "parametrize: same test, different data" },
     { t: "text",
@@ -86,20 +86,20 @@ XSS_PAYLOADS = [
 ]
 
 
-def render_search(q: str, secure: bool) -> str:
-    shown = html.escape(q) if secure else q
+def render_search(q: str, escape: bool) -> str:
+    shown = html.escape(q) if escape else q
     return f'<span id="search-term">{shown}</span>'
 
 
 @pytest.mark.parametrize("payload", XSS_PAYLOADS)
-def test_secure_mode_encodes(payload):
-    assert payload not in render_search(payload, secure=True)
+def test_escaped_render_is_safe(payload):            # SecureShop gibi / like SecureShop
+    assert payload not in render_search(payload, escape=True)
 
 
 @pytest.mark.parametrize("payload", XSS_PAYLOADS)
-def test_vulnerable_mode_reflects(payload):
-    # güvenlik testi semantiği: zafiyet VARSA kırmızı / red when the vuln EXISTS
-    assert payload not in render_search(payload, secure=False), "reflected XSS"
+def test_raw_render_is_safe(payload):                # kodlama unutulursa / encoding forgotten
+    # savunma kontrolü: savunma YOKSA kırmızı / red when the defense is MISSING
+    assert payload not in render_search(payload, escape=False), "reflected XSS"
 
 
 @pytest.mark.parametrize("status, expected_ok", [(200, True), (302, True), (500, False)])
@@ -145,37 +145,46 @@ print("pytest -m functional")
 run_tests(marker="functional")
 ` },
     { t: "callout", kind: "sec",
-      tr: `<p>SecureQA'daki <strong>anlam kuralı</strong>: bir güvenlik testi, zafiyet <strong>varsa</strong> FAIL olur. Böylece <code>--mode vulnerable</code> ile çalıştırınca çok sayıda kırmızı, <code>--mode secure</code> ile çalıştırınca hepsi yeşil görürsün. Kırmızı test = bulunan açık = rapordaki bir <code>Finding</code>.</p>`,
-      en: `<p>SecureQA's <strong>semantics rule</strong>: a security test FAILS when the vulnerability <strong>is present</strong>. So running with <code>--mode vulnerable</code> shows lots of red, and <code>--mode secure</code> shows all green. Red test = vulnerability found = a <code>Finding</code> in the report.</p>` },
-    { t: "project", file: "tests/security/test_injection_sqli.py",
-      tr: `<p>Gerçek bir SecureQA güvenlik testi. Fixture'lar (<code>api</code>, <code>base_url</code>, <code>record_finding</code>) parametre adıyla geliyor, marker'lar <code>pytestmark</code> ile dosya seviyesinde veriliyor, test zafiyet bulursa önce bulguyu kaydedip sonra <code>assert</code> ile kırmızıya dönüyor.</p>`,
-      en: `<p>A real SecureQA security test. Fixtures (<code>api</code>, <code>base_url</code>, <code>record_finding</code>) arrive by parameter name, markers are set at file level with <code>pytestmark</code>, and when the test finds the vulnerability it records the finding first, then turns red via <code>assert</code>.</p>`,
+      tr: `<p>SecureQA'da iki hedef ve iki <strong>anlam kuralı</strong> var:</p><ul><li><strong>SecureShop</strong> (<code>-m security</code>, <code>tests/security/</code>): güvenli yazılmış demo mağaza. Testler <strong>savunma regresyon kontrolleridir</strong>; savunma yerindeyse PASS (yeşil), biri bir savunmayı bozarsa FAIL (kırmızı). Her sonuç rapora bir <code>Check</code> olarak yazılır.</li><li><strong>OWASP Juice Shop</strong> (<code>-m juiceshop</code>, <code>tests/juiceshop/</code>): bilerek zafiyetli bırakılmış eğitim uygulaması. Saldırı başarılı olur ve Juice Shop challenge'ı “solved” işaretlerse test PASS olur ve rapora bir <code>Finding</code> eklenir.</li></ul>`,
+      en: `<p>SecureQA has two targets and two <strong>semantics rules</strong>:</p><ul><li><strong>SecureShop</strong> (<code>-m security</code>, <code>tests/security/</code>): the securely-built demo shop. Its tests are <strong>defensive regression checks</strong>: PASS (green) while the defense is in place, FAIL (red) if someone breaks it. Each result is written to the report as a <code>Check</code>.</li><li><strong>OWASP Juice Shop</strong> (<code>-m juiceshop</code>, <code>tests/juiceshop/</code>): a deliberately vulnerable training app. When the attack works and Juice Shop marks the challenge “solved”, the test PASSES and a <code>Finding</code> is added to the report.</li></ul>` },
+    { t: "project", file: "tests/security/test_injection_defenses.py (kısaltılmış / shortened)",
+      tr: `<p>Gerçek bir SecureShop savunma kontrolü. Fixture'lar (<code>api</code>, <code>base_url</code>, <code>record_check</code>) parametre adıyla geliyor, marker'lar <code>pytestmark</code> ile dosya seviyesinde veriliyor. Test sonucu ne olursa olsun önce bir <code>Check</code> kaydediyor (rapor için), sonra <code>assert</code> ile karar veriyor: SQL hatası sızarsa kırmızı.</p>`,
+      en: `<p>A real SecureShop defensive check. Fixtures (<code>api</code>, <code>base_url</code>, <code>record_check</code>) arrive by parameter name, markers are set at file level with <code>pytestmark</code>. Whatever the outcome, the test first records a <code>Check</code> (for the report), then decides with <code>assert</code>: red if a SQL error leaks.</p>`,
       code: String.raw`
 from urllib.parse import quote
 
 import pytest
 
-from secureqa import catalog
-from secureqa.security import sqli
-from secureqa.security.payloads import SQLI_PROBE
+from secureqa.checks import Check
+from secureqa.security import csrf, sqli, xss
+from secureqa.security.payloads import SQLI_PROBE, XSS_PAYLOADS, XSS_STORED_PAYLOAD
 
 pytestmark = [pytest.mark.security, pytest.mark.owasp_a03]
 
 
-def test_sqli_in_product_search(api, base_url, record_finding) -> None:
-    """The HTML search (/products?q=) must not be injectable."""
+def test_sqli_search_is_parameterized(api, base_url, record_check) -> None:
+    """A single quote in the search must NOT leak a SQL error."""
     url = f"{base_url}/products?q={quote(SQLI_PROBE)}"
     vulnerable, evidence = sqli.probe_error_based(api, url)
-    if vulnerable:
-        record_finding(catalog.SQLI_SEARCH.finding(url=url, evidence=evidence))
-    assert not vulnerable, "SQL injection in product search (error leaked)."
+    record_check(
+        Check(
+            id="SQLI-SEARCH",
+            title_tr="Ürün araması parametreli (SQLi yok)",
+            title_en="Product search parameterized (no SQLi)",
+            category="Injection",
+            passed=not vulnerable,
+            detail=evidence,
+        )
+    )
+    assert not vulnerable, "SQL error leaked from product search."
 `,
       notes: [
         { line: 9, tr: "Bu dosyadaki tüm testler <code>security</code> ve <code>owasp_a03</code> marker'larını alır.", en: "Every test in this file gets the <code>security</code> and <code>owasp_a03</code> markers." },
         { line: 12, tr: "Üç fixture isimle enjekte ediliyor (10. ders).", en: "Three fixtures injected by name (lesson 10)." },
         { line: 14, tr: "<code>SQLI_PROBE</code> = tek tırnak <code>'</code>; <code>quote()</code> ile URL'ye güvenle konuyor.", en: "<code>SQLI_PROBE</code> = a single quote <code>'</code>; put safely in the URL with <code>quote()</code>." },
         { line: 15, tr: "Fonksiyon bir tuple döndürüyor ve açılıyor: <code>(bool, str)</code>.", en: "The function returns a tuple that is unpacked: <code>(bool, str)</code>." },
-        { line: 18, tr: "Zafiyet varsa test FAIL → kırmızı. Mesaj, raporda okunacak cümle.", en: "If vulnerable the test FAILS → red. The message is the sentence shown in the report." }
+        { line: 22, tr: "<code>passed=not vulnerable</code>: savunma yerindeyse kontrol geçer; rapordaki SecureShop bölümü bunu gösterir.", en: "<code>passed=not vulnerable</code>: the check passes while the defense holds; the report's SecureShop section shows it." },
+        { line: 26, tr: "SecureShop parametreli sorgu kullandığı için bu assert normalde geçer. Biri sorguyu f-string'e çevirirse test FAIL → kırmızı.", en: "SecureShop uses parameterized queries, so this assert normally passes. If someone turns the query into an f-string, the test FAILS → red." }
       ] }
   ],
   exercises: [

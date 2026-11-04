@@ -134,9 +134,9 @@ print(error_text is None)
       tr: `<p>Projenin ayar dosyası, bu dersteki her şeyi kullanıyor: sabitler büyük harfle, tipler açıkça yazılmış (<code>: str</code>, <code>: tuple[str, ...]</code> — tip ipuçlarını 5. derste göreceğiz) ve ortam değişkeninden gelen metin <code>bool</code>'a <strong>karşılaştırma ile</strong> çevriliyor.</p>`,
       en: `<p>The project's settings file uses everything from this lesson: constants in upper case, types written explicitly (<code>: str</code>, <code>: tuple[str, ...]</code> — we'll cover type hints in lesson 5) and text from an environment variable is turned into a <code>bool</code> <strong>by comparing it</strong>.</p>`,
       code: String.raw`
-DEFAULT_BASE_URL: str = "http://127.0.0.1:5000"
+DEFAULT_BASE_URL: str = "http://127.0.0.1:5000"       # SecureShop (functional target)
+DEFAULT_JUICE_SHOP_URL: str = "http://127.0.0.1:3000"  # OWASP Juice Shop (security target)
 SUPPORTED_LANGS: tuple[str, ...] = ("tr", "en")
-SUPPORTED_MODES: tuple[str, ...] = ("vulnerable", "secure")
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -147,8 +147,9 @@ def _env_bool(name: str, default: bool) -> bool:
     return value.strip().lower() in ("1", "true", "yes", "on")
 `,
       notes: [
-        { line: 1, tr: "Sabit: test edilen uygulamanın varsayılan adresi. Büyük harf = “bunu değiştirme”.", en: "Constant: default address of the app under test. Upper case = “don't change me”." },
-        { line: 2, tr: "Desteklenen diller bir <em>tuple</em> içinde (3. derste).", en: "Supported languages live in a <em>tuple</em> (lesson 3)." },
+        { line: 1, tr: "Sabit: SecureShop'un (güvenli demo mağaza) varsayılan adresi. Büyük harf = “bunu değiştirme”.", en: "Constant: default address of SecureShop (the secure demo shop). Upper case = “don't change me”." },
+        { line: 2, tr: "İkinci hedef: güvenlik bulgularının geldiği OWASP Juice Shop, başka bir portta.", en: "The second target: OWASP Juice Shop, where security findings come from, on another port." },
+        { line: 3, tr: "Desteklenen diller bir <em>tuple</em> içinde (3. derste).", en: "Supported languages live in a <em>tuple</em> (lesson 3)." },
         { line: 8, tr: "Ortam değişkeni yoksa <code>get</code> <code>None</code> döner…", en: "If the variable is missing, <code>get</code> returns <code>None</code>…" },
         { line: 9, tr: "…ve <code>is None</code> ile kontrol edilir.", en: "…which is checked with <code>is None</code>." },
         { line: 11, tr: "<code>bool(\"false\")</code> True olacağı için metin bir listeyle karşılaştırılır.", en: "Since <code>bool(\"false\")</code> would be True, the text is compared to a list instead." }

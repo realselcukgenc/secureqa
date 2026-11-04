@@ -60,7 +60,7 @@ print(header.lower(), header.upper())
 base = "http://127.0.0.1:5000/"
 print(base.rstrip("/") + "/login")    # sondaki / işaretini at / drop trailing slash
 
-banner = "Werkzeug/3.1 Python/3.12"   # Flask'ın varsayılan Server başlığı / Flask's default Server header
+banner = "Werkzeug/3.1 Python/3.12"   # Flask'ın Server başlığı / Flask's header
 print(banner.split(" "))              # ['Werkzeug/3.1', 'Python/3.12']
 print(banner.startswith("Werkzeug"), banner.endswith(".12"))
 

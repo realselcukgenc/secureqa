@@ -177,7 +177,7 @@ class InvalidSeverityError(ValueError): ...`,
         note: { tr: "Sadece beklediğin hatayı yakala; çıplak <code>except:</code> yazma.", en: "Catch only the error you expect; never write a bare <code>except:</code>." } },
       { title: { tr: "assert", en: "assert" }, code: String.raw`
 assert response.status_code == 200, f"got {response.status_code}"
-assert not vulnerable, "Reflected XSS: the search term is not safely encoded."`,
+assert safe, "Reflected XSS: the search term was not safely encoded."`,
         note: { tr: "Mesaj, rapordaki tek ipucudur — her zaman yaz.", en: "The message is the only clue in the report — always write it." } }
     ] },
     { title: { tr: "Dosyalar ve JSON", en: "Files & JSON" }, items: [
@@ -253,7 +253,7 @@ pytest -m security                 # marker ile seç / select by marker
 pytest -m "not security"
 pytest -k sqli -x                  # isimle seç, ilk hatada dur
 pytest --lf                        # son kalanlar / last failed
-pytest --mode secure               # SecureQA seçeneği / option
+pytest -m juiceshop --no-server    # Juice Shop (JUICE_SHOP_URL)
 pytest --html=reports/pytest.html  # pytest-html`,
         note: null }
     ] },
@@ -313,7 +313,7 @@ class Finding:
 asdict(finding)                     # -> dict (JSON'a hazır / JSON-ready)
 
 @dataclass(frozen=True)
-class VulnInfo: ...
+class ChallengeInfo: ...
 replace(info, severity="high")      # değiştirilmiş kopya / modified copy`,
         note: null }
     ] },

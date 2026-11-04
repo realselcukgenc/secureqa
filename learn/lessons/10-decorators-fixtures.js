@@ -154,14 +154,14 @@ run_tests()
       tr: `<p><strong>scope</strong> bir fixture'ın ne kadar yaşayacağını belirler: <code>"function"</code> (varsayılan, her test için yeni), <code>"module"</code>, <code>"session"</code> (tüm koşu boyunca bir kez). Tarayıcıyı açmak pahalıdır, bu yüzden SecureQA tarayıcıyı <code>session</code> scope'ta bir kez açar, ama her teste <strong>yeni bir context ve page</strong> verir: çerezler ve oturumlar testler arasında sızmaz.</p>`,
       en: `<p><strong>scope</strong> sets how long a fixture lives: <code>"function"</code> (default, new for every test), <code>"module"</code>, <code>"session"</code> (once for the whole run). Opening a browser is expensive, so SecureQA opens it once with <code>session</code> scope, but gives every test <strong>a new context and page</strong>: cookies and logins never leak between tests.</p>` },
     { t: "project", file: "tests/conftest.py",
-      tr: `<p>Projenin <code>conftest.py</code> dosyasından gerçek fixture'lar. pytest bu dosyayı otomatik yükler; içindeki fixture'lar import edilmeden tüm testlerde kullanılabilir.</p>`,
-      en: `<p>Real fixtures from the project's <code>conftest.py</code>. pytest loads this file automatically; its fixtures are available in every test without importing them.</p>`,
+      tr: `<p>Projenin <code>conftest.py</code> dosyasından gerçek fixture'lar. pytest bu dosyayı otomatik yükler; içindeki fixture'lar import edilmeden tüm testlerde kullanılabilir. <code>base_url</code> fixture'ı SecureShop'u (<code>python -m demo_app</code>) bir kez başlatır; Juice Shop testleri ise ayrı bir <code>juice</code> fixture'ı kullanır (Juice Shop çalışmıyorsa test atlanır).</p>`,
+      en: `<p>Real fixtures from the project's <code>conftest.py</code>. pytest loads this file automatically; its fixtures are available in every test without importing them. The <code>base_url</code> fixture starts SecureShop (<code>python -m demo_app</code>) once; Juice Shop tests use a separate <code>juice</code> fixture instead (the test is skipped when Juice Shop isn't running).</p>`,
       code: String.raw`
 @pytest.fixture()
 def api(base_url: str) -> Iterator[requests.Session]:
     """A requests.Session with the base URL remembered (for API/security checks)."""
     session = requests.Session()
-    session.base_url = base_url
+    session.base_url = base_url  # type: ignore[attr-defined]  # handy extra attribute
     yield session
     session.close()
 
@@ -185,13 +185,25 @@ def page(_browser, settings: Settings) -> Iterator:
     install_xss_probe(page)
     yield page
     context.close()
+
+
+@pytest.fixture()
+def record_check(checks: ChecksCollector, request: pytest.FixtureRequest):
+    """Return a function tests call to record a Check (SecureShop defense)."""
+    def _record(check: Check) -> Check:
+        if not check.test_id:
+            check.test_id = request.node.nodeid
+        return checks.add(check)
+
+    return _record
 `,
       notes: [
         { line: 2, tr: "<code>api</code>, <code>base_url</code> fixture'ını parametre adıyla istiyor; dönüş tipi <code>Iterator</code> çünkü bir generator.", en: "<code>api</code> asks for the <code>base_url</code> fixture by parameter name; its return type is <code>Iterator</code> because it's a generator." },
         { line: 6, tr: "<code>yield</code>: test bu noktada çalışır; sonra <code>session.close()</code> teardown'ı gelir.", en: "<code>yield</code>: the test runs here; then comes the <code>session.close()</code> teardown." },
         { line: 10, tr: "<code>scope=\"session\"</code>: tarayıcı tüm test koşusu için bir kez açılır.", en: "<code>scope=\"session\"</code>: the browser opens once for the whole test run." },
         { line: 23, tr: "Her test için izole bir context: çerezler/oturumlar paylaşılmaz.", en: "An isolated context per test: cookies/logins are not shared." },
-        { line: 26, tr: "XSS kanıt fonksiyonu sayfa yüklenmeden enjekte ediliyor (15. ders).", en: "The XSS proof function is injected before the page loads (lesson 15)." }
+        { line: 26, tr: "XSS kanıt fonksiyonu sayfa yüklenmeden enjekte ediliyor (15. ders).", en: "The XSS proof function is injected before the page loads (lesson 15)." },
+        { line: 34, tr: "Fixture bir <strong>fonksiyon</strong> döndürüyor: iç fonksiyon <code>_record</code>, <code>checks</code> ve <code>request</code>'i hatırlayan bir closure (decorator'lardaki <code>wrapper</code> gibi). SecureShop testleri <code>record_check(Check(...))</code> diye çağırır.", en: "The fixture returns a <strong>function</strong>: the inner <code>_record</code> is a closure that remembers <code>checks</code> and <code>request</code> (like a decorator's <code>wrapper</code>). SecureShop tests call it as <code>record_check(Check(...))</code>." }
       ] }
   ],
   exercises: [

@@ -99,27 +99,31 @@ print(loaded == findings, len(loaded))
 print(path.read_text(encoding="utf-8"))
 ` },
     { t: "callout", kind: "sec",
-      tr: `<p>Dosya yollarını kullanıcı girdisinden üretmek tehlikelidir: <code>Path("files") / "../secret.txt"</code> klasörün <strong>dışına</strong> çıkar. VulnShop'un <code>/download?file=</code> uç noktası tam olarak bu <strong>path traversal</strong> zafiyetini (simüle olarak) içeriyor. Güvenli kodda yol <code>resolve()</code> edilir ve izin verilen klasörün içinde mi diye kontrol edilir: <code>target.resolve().is_relative_to(base.resolve())</code>.</p>`,
-      en: `<p>Building file paths from user input is dangerous: <code>Path("files") / "../secret.txt"</code> escapes <strong>outside</strong> the folder. VulnShop's <code>/download?file=</code> endpoint contains exactly this <strong>path traversal</strong> vulnerability (simulated). Safe code calls <code>resolve()</code> and checks the path is inside the allowed folder: <code>target.resolve().is_relative_to(base.resolve())</code>.</p>` },
-    { t: "project", file: "secureqa/findings.py",
-      tr: `<p><code>FindingsCollector.save_json</code>, test oturumu sonunda <code>reports/findings.json</code> dosyasını yazan metot. Bu dersteki her şeyi tek satırda kullanıyor: klasörü oluştur, <code>json.dumps</code> ile Türkçe dostu metin üret, UTF-8 olarak yaz.</p>`,
-      en: `<p><code>FindingsCollector.save_json</code> is the method that writes <code>reports/findings.json</code> at the end of a test session. It uses everything from this lesson in one line: create the folder, produce Turkish-friendly text with <code>json.dumps</code>, write it as UTF-8.</p>`,
+      tr: `<p>Dosya yollarını kullanıcı girdisinden üretmek tehlikelidir: <code>Path("files") / "../secret.txt"</code> klasörün <strong>dışına</strong> çıkar (<strong>path traversal</strong>). Güvenli kodda yol <code>resolve()</code> edilir ve izin verilen klasörün içinde mi diye kontrol edilir: <code>target.resolve().is_relative_to(base.resolve())</code>. Projedeki SecureShop kullanıcıdan dosya yolu hiç almaz; OWASP Juice Shop ise <code>/ftp</code> klasöründe gizli bir belgeyi açıkta bırakır (“Confidential Document” challenge'ı, <code>tests/juiceshop/test_challenges.py</code>).</p>`,
+      en: `<p>Building file paths from user input is dangerous: <code>Path("files") / "../secret.txt"</code> escapes <strong>outside</strong> the folder (<strong>path traversal</strong>). Safe code calls <code>resolve()</code> and checks the path is inside the allowed folder: <code>target.resolve().is_relative_to(base.resolve())</code>. The project's SecureShop never takes a file path from the user at all; OWASP Juice Shop, on the other hand, leaves a confidential document exposed under <code>/ftp</code> (the “Confidential Document” challenge, <code>tests/juiceshop/test_challenges.py</code>).</p>` },
+    { t: "project", file: "secureqa/report/generator.py (write_report)",
+      tr: `<p><code>write_report()</code>, pytest oturumunun sonunda (<code>conftest.py</code> içindeki <code>pytest_sessionfinish</code>) <code>reports/findings.json</code> dosyasını yazan fonksiyon. Tek bir JSON'da iki hedef var: SecureShop savunma kontrolleri ve Juice Shop bulguları. Bu dersteki her şeyi kullanıyor: klasörü oluştur, <code>/</code> ile yol kur, <code>json.dumps</code> ile Türkçe dostu metin üret, UTF-8 olarak yaz.</p>`,
+      en: `<p><code>write_report()</code> is the function that writes <code>reports/findings.json</code> at the end of the pytest session (from <code>pytest_sessionfinish</code> in <code>conftest.py</code>). One JSON holds both targets: SecureShop defensive checks and Juice Shop findings. It uses everything from this lesson: create the folder, build a path with <code>/</code>, produce Turkish-friendly text with <code>json.dumps</code>, write it as UTF-8.</p>`,
       code: String.raw`
-def to_list(self) -> list[dict[str, Any]]:
-    """All findings as plain dicts, most severe first."""
-    ordered = sorted(self.findings, key=lambda f: SEVERITIES.index(f.severity))
-    return [finding.to_dict() for finding in ordered]
+reports_dir.mkdir(parents=True, exist_ok=True)
+# ...
+json_path = reports_dir / json_name
 
-def save_json(self, path: Path) -> None:
-    """Write only the findings list to a JSON file (UTF-8, pretty printed)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(self.to_list(), ensure_ascii=False, indent=2), encoding="utf-8")
+combined = {
+    "generated_at": generated_at,
+    "secureshop_checks": [c.to_dict() for c in all_checks],
+    "juiceshop_findings": [f.to_dict() for f in sorted(all_findings, key=lambda f: SEVERITIES.index(f.severity))],
+    "risk_score": risk_score(all_findings),
+    "risk_grade": risk_grade(risk_score(all_findings)),
+}
+json_path.write_text(json.dumps(combined, ensure_ascii=False, indent=2), encoding="utf-8")
 `,
       notes: [
-        { line: 3, tr: "<code>sorted</code> + <code>key=lambda</code> (5. ders): critical önce, info en son.", en: "<code>sorted</code> + <code>key=lambda</code> (lesson 5): critical first, info last." },
-        { line: 4, tr: "Her <code>Finding</code> nesnesi sözlüğe çevriliyor, çünkü <code>json</code> dataclass'ları doğrudan bilmez (14. ders).", en: "Each <code>Finding</code> becomes a dict because <code>json</code> doesn't know dataclasses directly (lesson 14)." },
-        { line: 8, tr: "<code>reports/</code> klasörü yoksa oluşturulur; varsa hata vermez.", en: "Creates <code>reports/</code> if missing; no error if it exists." },
-        { line: 9, tr: "<code>ensure_ascii=False</code>: “Yansıtılmış XSS” dosyada okunur halde kalır.", en: "<code>ensure_ascii=False</code>: “Yansıtılmış XSS” stays readable in the file." }
+        { line: 1, tr: "<code>reports/</code> klasörü yoksa oluşturulur; varsa hata vermez.", en: "Creates <code>reports/</code> if missing; no error if it exists." },
+        { line: 3, tr: "<code>Path / str</code> → yeni bir <code>Path</code>: <code>reports/findings.json</code>.", en: "<code>Path / str</code> → a new <code>Path</code>: <code>reports/findings.json</code>." },
+        { line: 7, tr: "Her <code>Check</code> nesnesi sözlüğe çevriliyor, çünkü <code>json</code> dataclass'ları doğrudan bilmez (14. ders).", en: "Each <code>Check</code> becomes a dict because <code>json</code> doesn't know dataclasses directly (lesson 14)." },
+        { line: 8, tr: "<code>sorted</code> + <code>key=lambda</code> (5. ders): critical önce, info en son.", en: "<code>sorted</code> + <code>key=lambda</code> (lesson 5): critical first, info last." },
+        { line: 12, tr: "<code>ensure_ascii=False</code>: “Yansıtılmış XSS” dosyada okunur halde kalır.", en: "<code>ensure_ascii=False</code>: “Yansıtılmış XSS” stays readable in the file." }
       ] }
   ],
   exercises: [

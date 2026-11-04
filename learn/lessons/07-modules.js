@@ -76,19 +76,35 @@ print(cfg.__file__)
     { t: "text",
       tr: `<p>Bir dosya doğrudan çalıştırıldığında (<code>python run.py</code>) içindeki <code>__name__</code> değişkeni <code>"__main__"</code> olur; import edildiğinde ise modülün adı olur. Bu kalıp “dosya hem import edilebilsin hem de komut olarak çalışabilsin” demektir. <code>python -m demo_app</code> komutu da paketin <code>__main__.py</code> dosyasını çalıştırır.</p>`,
       en: `<p>When a file is run directly (<code>python run.py</code>) its <code>__name__</code> is <code>"__main__"</code>; when imported it's the module name. This pattern means “the file can be imported and also run as a command”. <code>python -m demo_app</code> runs the package's <code>__main__.py</code>.</p>` },
-    { t: "code", id: "c3", readonly: true, real: true, file: "run.py (örnek / example)",
+    { t: "code", id: "c3", readonly: true, real: true, file: "run.py (kısaltılmış / shortened)",
       code: String.raw`
 import subprocess
 import sys
 
 
-def run_tests(mode: str = "vulnerable") -> int:
-    return subprocess.call([sys.executable, "-m", "pytest", "--mode", mode])
+def _run_pytest(extra: list[str], label: str) -> int:
+    """Run pytest with extra args and return its exit code (0 = all passed)."""
+    command = [sys.executable, "-m", "pytest", *extra]
+    print(f"\n=== {label}: pytest {' '.join(extra)} ===")
+    return subprocess.call(command, cwd=PROJECT_ROOT)
+
+
+def cmd_test(args: argparse.Namespace) -> int:
+    """Run the SecureShop suites (functional + defensive security regression checks)."""
+    extra = ["-m", "functional or security", *(args.pytest_args or [])]
+    return _run_pytest(extra, "SecureShop")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return int(args.func(args))
 
 
 if __name__ == "__main__":
-    # Sadece "python run.py" ile çalışır, import edilince çalışmaz.
-    sys.exit(run_tests())
+    # Sadece "python run.py test" ile çalışır, import edilince çalışmaz.
+    # Only runs with "python run.py test"; importing the file does not run it.
+    raise SystemExit(main())
 ` },
     { t: "h", tr: "Sanal ortam ve pip", en: "Virtual environments and pip" },
     { t: "text",
@@ -107,8 +123,8 @@ pip list
 pip freeze > requirements.txt
 ` },
     { t: "project", file: "SecureQA proje yapısı / project layout",
-      tr: `<p>SecureQA bir paket: <code>secureqa/</code> klasöründeki her dosya bir modül, <code>pages/</code> ve <code>security/</code> alt paketler. <code>pages/__init__.py</code> sınıfları yeniden dışa aktararak (re-export) kısa import'lara izin veriyor: <code>from secureqa.pages import LoginPage</code>.</p>`,
-      en: `<p>SecureQA is a package: every file in <code>secureqa/</code> is a module, <code>pages/</code> and <code>security/</code> are sub-packages. <code>pages/__init__.py</code> re-exports the classes so imports stay short: <code>from secureqa.pages import LoginPage</code>.</p>`,
+      tr: `<p>SecureQA bir paket: <code>secureqa/</code> klasöründeki her dosya bir modül, <code>pages/</code> ve <code>security/</code> alt paketler. <code>pages/__init__.py</code> sınıfları yeniden dışa aktararak (re-export) kısa import'lara izin veriyor: <code>from secureqa.pages import LoginPage</code>. <code>demo_app/</code> da ayrı bir paket: güvenli demo mağaza SecureShop.</p>`,
+      en: `<p>SecureQA is a package: every file in <code>secureqa/</code> is a module, <code>pages/</code> and <code>security/</code> are sub-packages. <code>pages/__init__.py</code> re-exports the classes so imports stay short: <code>from secureqa.pages import LoginPage</code>. <code>demo_app/</code> is a separate package too: SecureShop, the securely-built demo shop.</p>`,
       lang: "text",
       code: String.raw`
 secureqa/                     <- paket / package
@@ -124,7 +140,9 @@ secureqa/                     <- paket / package
     xss.py                    <- from secureqa.security.payloads import XSS_MARKER
 tests/
   conftest.py                 <- pytest bunu otomatik yükler / auto-loaded by pytest
-  security/test_injection_xss.py
+  security/test_injection_defenses.py   <- SecureShop savunma kontrolleri / defensive checks
+  juiceshop/test_challenges.py          <- Juice Shop bulguları / findings
+demo_app/                     <- SecureShop: python -m demo_app
 `,
       notes: [
         { line: 2, tr: "<code>__init__.py</code> klasörü pakete çevirir (boş da olabilir).", en: "<code>__init__.py</code> turns a folder into a package (it may be empty)." },
