@@ -56,7 +56,9 @@ jobs:
     # do not let expected failures fail the job (the suite records findings for the report).
     services:
       juiceshop:
-        image: bkimminich/juice-shop:latest
+        # Pinned to the version the Juice Shop tests were written against
+        # (challenge keys/solve-logic verified against the v20.3.0 source).
+        image: bkimminich/juice-shop:v20.3.0
         ports:
           - 3000:3000
     env:
