@@ -69,3 +69,12 @@ def test_reflected_xss_in_order_tracking(juice, record_finding) -> None:
     assert record_if_solved(juice, "reflectedXssChallenge", evidence, record_finding), (
         "Juice Shop did not mark the 'Reflected XSS' challenge as solved."
     )
+
+
+def test_order_christmas_special(juice, record_finding) -> None:
+    """SQLi on product search should reveal a deleted product that we can then order."""
+    ok, evidence = juice.order_christmas_special()
+    assert ok, f"Expected to order the deleted Christmas product. {evidence}"
+    assert record_if_solved(juice, "christmasSpecialChallenge", evidence, record_finding), (
+        "Juice Shop did not mark the 'Christmas Special' challenge as solved."
+    )

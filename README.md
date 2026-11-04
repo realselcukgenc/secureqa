@@ -64,7 +64,7 @@ python run.py compare      # SecureShop ile Juice Shop karşılaştırması
 ### Test sonuçları (bu sürüm)
 
 - SecureShop: **28 test geçti**, 0 başarısız (10 fonksiyonel + 18 savunma kontrolü).
-- Juice Shop (GitHub Actions, Docker servisi): **25 challenge** OWASP Top 10 2021 kategorilerine yayılmış şekilde (A01, A02, A03, A04, A05, A07) saldırılıp `/api/Challenges` ile doğrulanır — SQLi ile admin/bender/jim girişi, UNION SQLi ile kullanıcı kimlik bilgileri ve şema, DOM/yansıtılmış/bonus XSS, IDOR sepet erişimi, admin kaydı, sahte geri bildirim, zayıf parola, sıfır yıldız, açık yönlendirme, `/metrics`, `/security.txt` ve daha fazlası. Admin Section testi artık önce SQLi ile oturum açtığı için atlanmıyor. Juice Shop çalışmıyorsa tüm bu testler temiz şekilde atlanır.
+- Juice Shop (GitHub Actions, Docker servisi): **42 challenge** OWASP Top 10 2021 kategorilerine yayılmış şekilde (A01, A02, A03, A04, A05, A07, A09) saldırılıp `/api/Challenges` ile doğrulanır — SQLi ile admin/bender/jim girişi, UNION SQLi ile kullanıcı kimlik bilgileri ve şema, DOM/yansıtılmış/bonus XSS, IDOR sepet erişimi ve sepet manipülasyonu, admin kaydı, sahte/silinmiş geri bildirim, yetkisiz ürün değişikliği, negatif tutarlı sipariş, zehirli null byte ile dosya okuma, unutulmuş yedekler, gizli blueprint, erişim logu ifşası, sızdırılmış/zayıf kimlik bilgileriyle giriş (destek ekibi, Amy, MC SafeSearch), güvenlik sorusuyla parola sıfırlama, zayıf parola, sıfır yıldız, açık yönlendirme, `/metrics`, `/security.txt` ve daha fazlası. Her bulgu ayrıca **CVSS 3.1 taban puanı + vektör** ile puanlanır (raporda ortalama/en yüksek CVSS gösterilir). Juice Shop çalışmıyorsa tüm bu testler temiz şekilde atlanır.
 
 ### Güvenlik notu
 
@@ -96,7 +96,7 @@ Run the suites only against systems you own or are authorized to test.
 ### Status
 
 - SecureShop: 28 passed, 0 failed.
-- Juice Shop (GitHub Actions with a Docker service): **25 challenges** attacked and verified via `/api/Challenges`, spread across OWASP Top 10 2021 (A01, A02, A03, A04, A05, A07) — SQLi login as admin/bender/jim, UNION SQLi for user credentials and DB schema, DOM/reflected/bonus XSS, basket IDOR, admin registration, forged/deleted feedback, weak password, zero-star feedback, open redirect, exposed `/metrics`, `/security.txt`, and more. The Admin Section test now authenticates (SQLi) first, so it no longer skips. All Juice Shop tests skip cleanly when Juice Shop is not running.
+- Juice Shop (GitHub Actions with a Docker service): **42 challenges** attacked and verified via `/api/Challenges`, spread across OWASP Top 10 2021 (A01, A02, A03, A04, A05, A07, A09) — SQLi login as admin/bender/jim, UNION SQLi for user credentials and DB schema, DOM/reflected/bonus XSS, basket IDOR and basket manipulation, admin registration, forged/deleted feedback, unauthorized product tampering, negative-total order, poison-null-byte file reads, forgotten backups, confidential blueprint, access-log disclosure, login with leaked/weak credentials (support team, Amy, MC SafeSearch), security-question password reset, weak password, zero-star feedback, open redirect, exposed `/metrics`, `/security.txt`, and more. Every finding also carries a **CVSS 3.1 base score + vector**, and the report shows the average/max CVSS. All Juice Shop tests skip cleanly when Juice Shop is not running.
 
 ---
 
@@ -115,6 +115,10 @@ The recording at the top is an end-to-end walkthrough of the SecureShop app (Tur
 |---|---|---|
 | ![](docs/screenshots/shop-product-dark.png) | ![](docs/screenshots/report-secureshop.png) | ![](docs/screenshots/learn-home-dark.png) |
 | ![](docs/screenshots/shop-checkout-tr.png) | ![](docs/screenshots/shop-admin-dark-en.png) | ![](docs/screenshots/learn-lesson15-sqli.png) |
+
+Security report with per-finding CVSS 3.1 scores and vectors (average/max in the summary):
+
+![CVSS report](docs/screenshots/report-cvss.png)
 
 ## Project layout
 
