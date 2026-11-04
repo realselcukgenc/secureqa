@@ -367,6 +367,20 @@ class JuiceShopClient:
         challenge = self.challenge_by_key(key)
         return bool(challenge and challenge.get("solved"))
 
+    def disabled_env(self, key: str) -> str | None:
+        """Environment name a challenge is disabled in, or ``None`` if it is active.
+
+        Some Juice Shop challenges are intentionally switched off in certain
+        deployments (``disabledEnv`` in ``challenges.yml``). For example the
+        reflected-XSS challenge is disabled under ``Docker``/``Heroku``, so it can
+        never be solved when Juice Shop runs as a Docker container — which is how
+        CI (and most local ``docker run`` setups) start it.
+        (TR: Bazı challenge'lar Docker gibi ortamlarda bilerek kapalıdır; o zaman çözülemez.)
+        """
+        challenge = self.challenge_by_key(key)
+        value = challenge.get("disabledEnv") if challenge else None
+        return value or None
+
     def wait_until_solved(self, key: str, timeout_s: float = 8.0) -> bool:
         """Poll ``/api/Challenges`` until the challenge is solved or the timeout passes.
 

@@ -52,7 +52,18 @@ def test_union_sqli_database_schema(juice, record_finding) -> None:
 
 
 def test_reflected_xss_in_order_tracking(juice, record_finding) -> None:
-    """A crafted order-tracking id should be reflected unencoded (reflected XSS)."""
+    """A crafted order-tracking id should be reflected unencoded (reflected XSS).
+
+    Note: Juice Shop disables this challenge under Docker/Heroku, so when the target
+    runs as a container (CI and most local ``docker run`` setups) it cannot be solved.
+    We skip in that case rather than fail, and still run the attack where it is active.
+    """
+    disabled_in = juice.disabled_env("reflectedXssChallenge")
+    if disabled_in:
+        pytest.skip(
+            f"'Reflected XSS' challenge is disabled in this Juice Shop environment "
+            f"({disabled_in}); run a non-Docker instance to exercise it."
+        )
     ok, evidence = juice.reflected_xss_track_order()
     assert ok, f"Expected the reflected-XSS request to be accepted. {evidence}"
     assert record_if_solved(juice, "reflectedXssChallenge", evidence, record_finding), (
