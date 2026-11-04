@@ -49,7 +49,7 @@ python run.py compare      # SecureShop ile Juice Shop karşılaştırması
 ### Test sonuçları (bu sürüm)
 
 - SecureShop: **28 test geçti**, 0 başarısız (10 fonksiyonel + 18 savunma kontrolü).
-- Juice Shop (GitHub Actions, Docker servisi): **5 challenge doğrulandı** (DOM XSS, SQL injection ile admin girişi, gizli belge erişimi, açık `/metrics` ucu, ayrıntılı hata mesajları), 1 test atlandı (Admin Section: önce oturum açılmış bir tarayıcı gerektiriyor).
+- Juice Shop (GitHub Actions, Docker servisi): **25 challenge** OWASP Top 10 2021 kategorilerine yayılmış şekilde (A01, A02, A03, A04, A05, A07) saldırılıp `/api/Challenges` ile doğrulanır — SQLi ile admin/bender/jim girişi, UNION SQLi ile kullanıcı kimlik bilgileri ve şema, DOM/yansıtılmış/bonus XSS, IDOR sepet erişimi, admin kaydı, sahte geri bildirim, zayıf parola, sıfır yıldız, açık yönlendirme, `/metrics`, `/security.txt` ve daha fazlası. Admin Section testi artık önce SQLi ile oturum açtığı için atlanmıyor. Juice Shop çalışmıyorsa tüm bu testler temiz şekilde atlanır.
 
 ### Güvenlik notu
 
@@ -81,7 +81,7 @@ Run the suites only against systems you own or are authorized to test.
 ### Status
 
 - SecureShop: 28 passed, 0 failed.
-- Juice Shop (GitHub Actions with a Docker service): 5 challenges confirmed solved (DOM XSS, SQLi admin login, confidential document, exposed metrics, verbose errors); 1 skipped (Admin Section needs an authenticated browser session).
+- Juice Shop (GitHub Actions with a Docker service): **25 challenges** attacked and verified via `/api/Challenges`, spread across OWASP Top 10 2021 (A01, A02, A03, A04, A05, A07) — SQLi login as admin/bender/jim, UNION SQLi for user credentials and DB schema, DOM/reflected/bonus XSS, basket IDOR, admin registration, forged/deleted feedback, weak password, zero-star feedback, open redirect, exposed `/metrics`, `/security.txt`, and more. The Admin Section test now authenticates (SQLi) first, so it no longer skips. All Juice Shop tests skip cleanly when Juice Shop is not running.
 
 ---
 

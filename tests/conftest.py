@@ -51,6 +51,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "owasp_a01: Broken Access Control.",
         "owasp_a02: Cryptographic Failures.",
         "owasp_a03: Injection.",
+        "owasp_a04: Insecure Design.",
         "owasp_a05: Security Misconfiguration.",
         "owasp_a07: Identification and Authentication Failures.",
     ]
