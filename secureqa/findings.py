@@ -67,6 +67,8 @@ class Finding:
         evidence: Proof: a response snippet, header value, etc.
         remediation_tr: How to fix it (Turkish).
         remediation_en: How to fix it (English).
+        cvss: CVSS 3.1 base score 0.0-10.0 (0.0 = no quantified technical impact).
+        cvss_vector: CVSS 3.1 vector string, e.g. ``"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"``.
         description_tr: Optional longer explanation (Turkish).
         description_en: Optional longer explanation (English).
         test_id: The pytest node id that produced the finding.
@@ -83,6 +85,8 @@ class Finding:
     evidence: str
     remediation_tr: str
     remediation_en: str
+    cvss: float = 0.0
+    cvss_vector: str = ""
     description_tr: str = ""
     description_en: str = ""
     test_id: str = ""
@@ -174,3 +178,32 @@ def risk_grade(score: int) -> str:
     if score < 70:
         return "D"
     return "F"
+
+
+# CVSS 3.1 qualitative severity bands (TR: CVSS 3.1 nitel önem aralıkları).
+# None 0.0 · Low 0.1-3.9 · Medium 4.0-6.9 · High 7.0-8.9 · Critical 9.0-10.0
+def cvss_rating(score: float) -> str:
+    """Map a CVSS 3.1 base score to its qualitative rating word."""
+    if score <= 0:
+        return "None"
+    if score < 4.0:
+        return "Low"
+    if score < 7.0:
+        return "Medium"
+    if score < 9.0:
+        return "High"
+    return "Critical"
+
+
+def cvss_summary(findings: list[Finding]) -> dict[str, float]:
+    """Return ``{"average": .., "max": ..}`` CVSS across findings that carry a score.
+
+    Findings with a 0.0 score (purely informational, no quantified impact) are excluded
+    from the average so a few info items do not drag the mean down artificially; they are
+    still counted in ``max`` only if nothing scores higher.
+    (TR: Puanı olan bulgular üzerinden ortalama ve en yüksek CVSS değeri.)
+    """
+    scored = [f.cvss for f in findings if f.cvss and f.cvss > 0]
+    if not scored:
+        return {"average": 0.0, "max": 0.0}
+    return {"average": round(sum(scored) / len(scored), 1), "max": round(max(scored), 1)}

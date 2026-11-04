@@ -56,3 +56,21 @@ def test_delete_five_star_feedback(juice, record_finding) -> None:
     assert record_if_solved(juice, "feedbackChallenge", evidence, record_finding), (
         "Juice Shop did not mark the 'Five-Star Feedback' challenge as solved."
     )
+
+
+def test_basket_manipulation(juice, record_finding) -> None:
+    """Updating a basket item to point at another user's basket should be possible (mass assignment)."""
+    ok, evidence = juice.manipulate_basket()
+    assert ok, f"Expected the basket-manipulation request to be sent. {evidence}"
+    assert record_if_solved(juice, "basketManipulateChallenge", evidence, record_finding), (
+        "Juice Shop did not mark the 'Manipulate Basket' challenge as solved."
+    )
+
+
+def test_product_tampering(juice, record_finding) -> None:
+    """An unauthorized PUT should let us rewrite a product's description (Product Tampering)."""
+    ok, evidence = juice.tamper_product()
+    assert ok, f"Expected the product-tampering PUT to be accepted. {evidence}"
+    assert record_if_solved(juice, "changeProductChallenge", evidence, record_finding), (
+        "Juice Shop did not mark the 'Product Tampering' challenge as solved."
+    )

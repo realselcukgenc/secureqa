@@ -28,6 +28,8 @@ from secureqa.findings import (
     OWASP_2021,
     SEVERITIES,
     Finding,
+    cvss_rating,
+    cvss_summary,
     risk_grade,
     risk_score,
 )
@@ -85,6 +87,31 @@ def _legend_html() -> str:
     return '<div class="legend">' + "".join(items) + "</div>"
 
 
+def _cvss_class(score: float) -> str:
+    """Map a CVSS score to one of the severity colour buckets used by the pills."""
+    if score <= 0:
+        return "info"
+    if score < 4.0:
+        return "low"
+    if score < 7.0:
+        return "medium"
+    if score < 9.0:
+        return "high"
+    return "critical"
+
+
+def _cvss_badge(finding: Finding) -> str:
+    """Render a compact CVSS score badge (empty string when no score is set)."""
+    if not finding.cvss_vector:
+        return ""
+    score = f"{finding.cvss:.1f}"
+    rating = cvss_rating(finding.cvss)
+    return (
+        f'<span class="cvss {_cvss_class(finding.cvss)}" '
+        f'title="{_esc(finding.cvss_vector)}">CVSS {score} · {rating}</span>'
+    )
+
+
 def _finding_row(finding: Finding) -> str:
     """Render one collapsible finding row (header + hidden body)."""
     sev = finding.severity
@@ -95,6 +122,13 @@ def _finding_row(finding: Finding) -> str:
     search_blob = " ".join(
         [finding.id, finding.title_tr, finding.title_en, finding.owasp, finding.cwe, finding.url]
     ).lower()
+    cvss_badge = _cvss_badge(finding)
+    cvss_kv = ""
+    if finding.cvss_vector:
+        cvss_kv = (
+            f'<span><b>CVSS 3.1:</b> {finding.cvss:.1f} ({_esc(cvss_rating(finding.cvss))}) '
+            f'· <code>{_esc(finding.cvss_vector)}</code></span>'
+        )
 
     return f"""
     <div class="frow" data-sev="{sev}" data-owasp="{_esc(owasp_code)}" data-search="{_esc(search_blob)}">
@@ -104,7 +138,7 @@ def _finding_row(finding: Finding) -> str:
           <span class="tr">{_esc(finding.title_tr)}</span><span class="en">{_esc(finding.title_en)}</span>
           <span class="fid">{_esc(finding.id)}</span>
         </span>
-        <span class="fmeta">{_esc(finding.owasp)}</span>
+        <span class="fmeta">{cvss_badge}</span>
         <span class="fmeta">{_esc(finding.cwe)}</span>
         <span class="caret">&#9656;</span>
       </div>
@@ -113,6 +147,7 @@ def _finding_row(finding: Finding) -> str:
           <span><b>OWASP:</b> {_esc(finding.owasp)}
             (<span class="tr">{_esc(owasp_names['tr'])}</span><span class="en">{_esc(owasp_names['en'])}</span>)</span>
           <span><b>CWE:</b> {_esc(finding.cwe)}</span>
+          {cvss_kv}
           <span><b>Test:</b> {_esc(finding.test_id) or '—'}</span>
         </div>
         <h4><span class="tr">Açıklama</span><span class="en">Description</span></h4>
@@ -168,6 +203,10 @@ def _summary_cards(findings: list[Finding], checks: list[Check]) -> str:
     grade = risk_grade(score)
     passed = sum(1 for c in checks if c.passed)
     total_checks = len(checks)
+    cvss = cvss_summary(findings)
+    cvss_avg = f"{cvss['average']:.1f}"
+    cvss_max = f"{cvss['max']:.1f}"
+    cvss_max_class = _cvss_class(cvss["max"])
     return f"""
     <div class="cards">
       <div class="card">
@@ -181,6 +220,11 @@ def _summary_cards(findings: list[Finding], checks: list[Check]) -> str:
       <div class="card accent-high">
         <div class="k"><span class="tr">Yüksek</span><span class="en">High</span></div>
         <div class="v">{counts['high']}</div>
+      </div>
+      <div class="card">
+        <div class="k"><span class="tr">CVSS (Ort. / En Yüksek)</span><span class="en">CVSS (Avg / Max)</span></div>
+        <div class="v small">{cvss_avg}<span class="muted" style="font-size:16px"> ort</span>
+          <span class="cvss {cvss_max_class}" style="vertical-align:middle">{cvss_max} max</span></div>
       </div>
       <div class="card accent-pass">
         <div class="k"><span class="tr">SecureShop Kontrolleri</span><span class="en">SecureShop Checks</span></div>

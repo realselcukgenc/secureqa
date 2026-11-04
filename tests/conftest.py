@@ -54,6 +54,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "owasp_a04: Insecure Design.",
         "owasp_a05: Security Misconfiguration.",
         "owasp_a07: Identification and Authentication Failures.",
+        "owasp_a09: Security Logging and Monitoring Failures.",
     ]
     for marker in markers:
         config.addinivalue_line("markers", marker)
