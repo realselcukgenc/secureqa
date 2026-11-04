@@ -1,0 +1,40 @@
+# Keep the image small and the build context clean (TR: imaj dışı tutulanlar).
+# Only demo_app/ + the requirement files are needed to serve the app.
+
+.git
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.eggs
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Project parts not needed to run the demo
+tests/
+secureqa/
+learn/
+docs/
+reports/
+instance/
+demo_app/instance/
+
+# Runtime data / local DBs
+*.sqlite
+*.db
+
+# Local deploy/docs artifacts
+Makefile
+run.py
+*.md
+fly.toml
+render.yaml
+Dockerfile
+.dockerignore
+
+# OS noise
+.DS_Store
+Thumbs.db

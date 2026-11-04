@@ -1,0 +1,28 @@
+# Render Blueprint for the SecureShop demo (TR: Render dağıtım planı).
+# https://render.com/docs/blueprint-spec
+#
+# One-click deploy: push this repo to GitHub, then on Render create a new "Blueprint" and
+# point it at the repo. Render reads this file and provisions a free web service that builds
+# the Dockerfile and serves the app. No manual settings needed.
+
+services:
+  - type: web
+    name: secureshop
+    runtime: docker            # build + run the repo-root Dockerfile
+    plan: free                 # free tier (spins down when idle; wakes on the next request)
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz  # the app's liveness endpoint -> {"status":"ok","app":"SecureShop"}
+    autoDeploy: true           # redeploy on every push to the connected branch
+    envVars:
+      # SECURITY: a strong, private signing key for session cookies. `generateValue: true`
+      # makes Render generate a random value once and keep it, so sessions survive restarts
+      # without the key ever appearing in the repo. Rotate it from the dashboard any time.
+      - key: SHOP_SECRET_KEY
+        generateValue: true
+      # The app writes its SQLite DB here (ephemeral on free tier — re-seeded on each boot).
+      - key: SHOP_DB
+        value: /tmp/secureshop.sqlite
+      # Behind Render's HTTPS proxy: send session cookies only over HTTPS (ProxyFix in wsgi.py
+      # lets Flask see the real scheme). SECURITY: do not turn this off in production.
+      - key: SHOP_SECURE_COOKIES
+        value: "1"

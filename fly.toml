@@ -1,0 +1,37 @@
+# Fly.io config for the SecureShop demo (TR: Fly.io yapılandırması).
+# https://fly.io/docs/reference/configuration/
+#
+# Deploy:  fly launch --copy-config --no-deploy   (reuses this file, reserves the app name)
+#          fly secrets set SHOP_SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")
+#          fly deploy
+# Fly builds the repo-root Dockerfile and runs gunicorn (see Dockerfile CMD).
+
+app = "secureshop-demo"        # change to a globally-unique name before `fly deploy`
+primary_region = "fra"          # Frankfurt; pick the region closest to you
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  SHOP_DB = "/tmp/secureshop.sqlite"
+  # SECURITY: behind Fly's TLS proxy; ProxyFix in wsgi.py reads X-Forwarded-Proto so the
+  # Secure session cookie works. SHOP_SECRET_KEY is set via `fly secrets set`, never here.
+  SHOP_SECURE_COOKIES = "1"
+
+[http_service]
+  internal_port = 8000          # must match the port gunicorn binds (PORT above)
+  force_https = true            # redirect http -> https at the edge
+  auto_stop_machines = true     # scale to zero when idle (free-friendly)
+  auto_start_machines = true    # wake on the next request
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"           # {"status":"ok","app":"SecureShop"}
+    interval = "15s"
+    timeout = "2s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

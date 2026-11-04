@@ -1,0 +1,11 @@
+# SecureShop — production deploy extras (TR: üretim dağıtımı için ek paketler).
+#
+# These are ONLY needed to serve the demo on a public host. Install them *in addition* to
+# the normal runtime deps:
+#
+#     pip install -r requirements.txt -r requirements-deploy.txt
+#
+# gunicorn is a pure-Python WSGI server (no browser, no Playwright) and is what the
+# Dockerfile / render.yaml / fly.toml use to run `demo_app.wsgi:app`.
+
+gunicorn==23.0.0        # production WSGI HTTP server
