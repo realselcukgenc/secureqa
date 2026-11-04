@@ -303,6 +303,8 @@ def init_db(app: Flask, reset: bool = False) -> None:
     path = _db_path(app)
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = connect(path)
+    # Wait for another worker's write lock instead of failing immediately.
+    conn.execute("PRAGMA busy_timeout = 10000")
     try:
         if reset:
             conn.executescript(
@@ -310,11 +312,21 @@ def init_db(app: Flask, reset: bool = False) -> None:
                 "DROP TABLE IF EXISTS reviews; DROP TABLE IF EXISTS products;"
                 "DROP TABLE IF EXISTS users;"
             )
-        conn.executescript(SCHEMA)
-        empty = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
-        if empty:
-            _seed(conn)
-        conn.commit()
+        conn.executescript(SCHEMA)  # CREATE TABLE IF NOT EXISTS: safe to run concurrently.
+        # Seeding must be race-safe: with several gunicorn workers booting against one SQLite
+        # file, only ONE may seed a fresh DB. BEGIN IMMEDIATE takes the write lock up front, so
+        # a second worker blocks here until the first commits, then sees users already exist and
+        # skips. (TR: Birden çok worker aynı anda açılırken yalnızca biri seed etmeli.)
+        conn.isolation_level = None  # drive the transaction by hand
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            empty = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+            if empty:
+                _seed(conn)
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
     finally:
         conn.close()
 
