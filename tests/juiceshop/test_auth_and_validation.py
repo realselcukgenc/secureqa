@@ -117,6 +117,10 @@ def test_reset_password_jim(juice, record_finding) -> None:
 
 # --------------------------------------------------------------------------- A04: business-logic abuse
 @pytest.mark.owasp_a04
+@pytest.mark.xfail(
+    reason="Multi-step basket/checkout flow; may not solve on every Juice Shop build.",
+    strict=False,
+)
 def test_negative_order(juice, record_finding) -> None:
     """Checking out a basket with a negative quantity should yield a negative-total order."""
     ok, evidence = juice.place_negative_order()

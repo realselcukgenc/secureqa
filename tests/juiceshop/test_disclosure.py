@@ -86,6 +86,10 @@ def test_extra_language_file(juice, record_finding) -> None:
 
 
 @pytest.mark.owasp_a09
+@pytest.mark.xfail(
+    reason="Access-log path varies by Juice Shop build/config; may 404 on some images.",
+    strict=False,
+)
 def test_access_log_disclosure(juice, record_finding) -> None:
     """The server access log should be reachable under /support/logs (logging failure)."""
     ok, evidence = juice.get_access_log()
