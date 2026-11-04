@@ -1,8 +1,19 @@
 # 🛡️ SecureQA
 
+[![CI](https://github.com/realselcukgenc/secureqa/actions/workflows/ci.yml/badge.svg)](https://github.com/realselcukgenc/secureqa/actions/workflows/ci.yml)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
+![pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
+![Security Testing](https://img.shields.io/badge/Security-Testing-D7263D?logo=owasp&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **Python + Playwright + pytest ile güvenlik odaklı test otomasyonu** · *Security-focused test automation with Python, Playwright and pytest*
 
 [🇹🇷 Türkçe](#-türkçe) · [🇬🇧 English](#-english)
+
+[![SecureQA demo](docs/demo/secureqa-demo.gif)](docs/demo/secureqa-demo.mp4)
+
+*🎬 SecureShop mağazası + güvenlik raporu turu · A tour of the SecureShop app and its security report* — [yüksek kalite / higher quality (MP4)](docs/demo/secureqa-demo.mp4)
 
 ![SecureShop](docs/screenshots/shop-home-tr.png)
 
@@ -87,6 +98,15 @@ Run the suites only against systems you own or are authorized to test.
 
 ---
 
+## 🎬 Demo
+
+Yukarıdaki kayıt, SecureShop mağazasını (TR/karanlık mod, ürün, sepet, yönetim paneli, EN diline geçiş) ve tek dosyalık iki dilli HTML güvenlik raporunu (TR/EN geçişi ve bulgular) uçtan uca gösterir.
+
+The recording at the top is an end-to-end walkthrough of the SecureShop app (Turkish/dark mode, a product, add-to-cart, the admin dashboard, switching to English) and the self-contained bilingual HTML security report (TR/EN toggle and findings).
+
+- 🖼️ GIF: [`docs/demo/secureqa-demo.gif`](docs/demo/secureqa-demo.gif)
+- 🎞️ MP4 (yüksek kalite / higher quality): [`docs/demo/secureqa-demo.mp4`](docs/demo/secureqa-demo.mp4)
+
 ## 📸 Screenshots
 
 | SecureShop | Report | Python guide |
@@ -101,7 +121,7 @@ demo_app/        SecureShop (Flask)
 secureqa/        framework: config, pages/, security/, findings, report/
 tests/           functional/, security/, juiceshop/
 learn/           interactive Python guide (static site)
-docs/            screenshots
+docs/            screenshots + demo recording (docs/demo/)
 .github/         CI (GitHub Actions)
 ```
 
