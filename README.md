@@ -17,6 +17,8 @@
 
 ![SecureShop](docs/screenshots/shop-home-tr.png)
 
+> 🔌 **REST API güvenlik boyutu / REST API security dimension:** `tests/api/` (marker: `api`) SecureShop'un JSON API'sini OWASP API Security Top 10 (2023) eşleştirmesiyle denetler — kimlik doğrulama, BOLA/IDOR, güvenlik başlıkları, CORS, hız sınırı, CSRF, mass-assignment ve hassas alan sızıntısı. · The `tests/api/` suite (marker `api`, helpers in `secureqa/apisec/`) runs defensive checks on SecureShop's JSON API mapped to the OWASP API Security Top 10 (2023): authentication, BOLA/IDOR, security headers, CORS, rate limiting, CSRF, mass-assignment and sensitive-field exposure.
+
 ---
 
 ## 🇹🇷 Türkçe
