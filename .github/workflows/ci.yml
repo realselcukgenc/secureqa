@@ -11,14 +11,14 @@ on:
 jobs:
   # --------------------------------------------------------------- SecureShop (required)
   secureshop:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload SecureShop report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: secureqa-secureshop-report
           path: |
@@ -50,7 +50,7 @@ jobs:
 
   # --------------------------------------------------------------- Juice Shop (optional)
   juiceshop:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     # Juice Shop runs as a Docker service on port 3000. Findings are EXPECTED here, so we
     # do not let expected failures fail the job (the suite records findings for the report).
@@ -63,10 +63,10 @@ jobs:
       JUICE_SHOP_URL: http://127.0.0.1:3000
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload Juice Shop report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: secureqa-juiceshop-report
           path: |

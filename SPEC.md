@@ -72,8 +72,8 @@ Error pages: vulnerable mode shows verbose stack traces (generic 500 page with t
 ## PART B — secureqa framework + tests
 - Package `secureqa/`: `config.py` (base_url from env `BASE_URL` default `http://127.0.0.1:5000`, browser, headless, lang),
   `pages/` (Page Object Model: BasePage, LoginPage, ProductsPage, ProductPage, AccountPage, AdminPage),
-  `security/` (reusable checks: headers.py, cookies.py, xss.py with payload list, sqli.py, access_control.py, redirects.py,
-  traversal.py, info_disclosure.py, ratelimit.py), `findings.py` (Finding dataclass: id, title_tr, title_en, severity
+  `security/` (reusable checks: headers.py, cookies.py, xss.py with payload list, sqli.py, access_control.py,
+  info_disclosure.py, ratelimit.py), `findings.py` (Finding dataclass: id, title_tr, title_en, severity
   [critical/high/medium/low/info], owasp (e.g. "A03:2021-Injection"), cwe, url, evidence, remediation_tr, remediation_en),
   `report/` (custom bilingual HTML dashboard generator — beautiful, self-contained single HTML file, charts drawn with
   inline SVG, filter by severity/OWASP, TR/EN toggle, dark/light; also JSON output).
